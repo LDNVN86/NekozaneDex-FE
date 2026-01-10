@@ -3,16 +3,22 @@ import { ArrowRight, Flame, Sparkles, TrendingUp } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
 import { StoryCard } from "@/features/story/components/story-card";
-import { mockStories, genres } from "@/features/story/data/mock-data";
+import { genres } from "@/features/story/data/mock-data";
+import { getHotStories, getLatestStories, type Story } from "@/features/story";
 
-export default function HomePage() {
-  const hotStories = mockStories.filter((s) => s.isHot);
-  const newStories = mockStories.slice(0, 6);
+export default async function HomePage() {
+  const [latestRes, hotRes] = await Promise.all([
+    getLatestStories(6),
+    getHotStories(4),
+  ]);
+
+  const newStories = latestRes.success ? latestRes.data : [];
+  const hotStories = hotRes.success ? hotRes.data : [];
 
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-background to-accent/10 py-16 md:py-24">
+      <section className="relative overflow-hidden bg-linear-to-br from-primary/10 via-background to-accent/10 py-16 md:py-24">
         <div className="container mx-auto px-4">
           <div className="flex flex-col items-center text-center gap-6 max-w-3xl mx-auto">
             <Badge variant="secondary" className="gap-1">
@@ -21,7 +27,7 @@ export default function HomePage() {
             </Badge>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-balance">
               Khám phá thế giới{" "}
-              <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
                 tiểu thuyết
               </span>{" "}
               đỉnh cao
@@ -66,8 +72,17 @@ export default function HomePage() {
             </Button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
-            {newStories.map((story) => (
-              <StoryCard key={story.id} {...story} />
+            {newStories.map((story: Story) => (
+              <StoryCard
+                key={story.id}
+                id={story.id}
+                title={story.title}
+                slug={story.slug}
+                coverUrl={story.cover_image_url}
+                viewCount={story.view_count}
+                chapterCount={story.total_chapters}
+                isHot={story.view_count > 1000}
+              />
             ))}
           </div>
         </div>
@@ -91,8 +106,17 @@ export default function HomePage() {
             </Button>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-            {hotStories.map((story) => (
-              <StoryCard key={story.id} {...story} />
+            {hotStories.map((story: Story) => (
+              <StoryCard
+                key={story.id}
+                id={story.id}
+                title={story.title}
+                slug={story.slug}
+                coverUrl={story.cover_image_url}
+                viewCount={story.view_count}
+                chapterCount={story.total_chapters}
+                isHot={story.view_count > 1000}
+              />
             ))}
           </div>
         </div>
@@ -133,7 +157,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <span className="text-xl font-bold bg-linear-to-r from-primary to-accent bg-clip-text text-transparent">
                 Nekozanedex
               </span>
             </div>

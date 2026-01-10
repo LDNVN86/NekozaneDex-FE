@@ -27,7 +27,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/shared/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+} from "@/shared/ui/sheet";
 import { cn } from "@/shared/lib/utils";
 import type { AuthUser } from "@/features/auth/types/auth";
 
@@ -86,7 +91,7 @@ export function Header({ user }: HeaderProps) {
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Book className="h-5 w-5" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent hidden sm:inline">
+            <span className="text-xl font-bold bg-linear-gradient-to-r from-primary to-accent bg-clip-text text-transparent hidden sm:inline">
               Nekozanedex
             </span>
           </Link>
@@ -242,6 +247,7 @@ export function Header({ user }: HeaderProps) {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[280px] sm:w-[350px]">
+                <SheetTitle className="sr-only">Menu điều hướng</SheetTitle>
                 <div className="flex flex-col gap-6 mt-6">
                   {/* Mobile Search */}
                   <div className="relative">

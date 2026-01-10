@@ -3,44 +3,31 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Mail, Lock, User, Book } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Book, Loader2 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { Separator } from "@/shared/ui/separator";
+import { registerAction, type AuthActionState } from "@/features/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [formData, setFormData] = React.useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    agreeTerms: false,
-  });
+  const [agreeTerms, setAgreeTerms] = React.useState(false);
 
-  const handleChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const [state, formAction, isPending] = React.useActionState<
+    AuthActionState | null,
+    FormData
+  >(registerAction, null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      return alert("Mật khẩu không khớp!");
+  // Redirect on successful registration
+  React.useEffect(() => {
+    if (state?.success) {
+      router.push("/auth/login?registered=true");
     }
-    if (!formData.agreeTerms) {
-      return alert("Vui lòng đồng ý với điều khoản sử dụng!");
-    }
-    setIsLoading(true);
-    // Simulate registration
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    router.push("/auth/login");
-  };
+  }, [state, router]);
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
@@ -58,22 +45,48 @@ export default function RegisterPage() {
 
         {/* Register Form */}
         <div className="bg-card border rounded-xl p-6 shadow-sm">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name */}
+          <form action={formAction} className="space-y-4">
+            {/* Error Message */}
+            {state && !state.success && (
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+                {state.message}
+              </div>
+            )}
+
+            {/* Success Message */}
+            {state?.success && (
+              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-600 text-sm">
+                {state.message}
+              </div>
+            )}
+
+            {/* Username */}
             <div className="space-y-2">
-              <Label htmlFor="name">Tên hiển thị</Label>
+              <Label htmlFor="username">Tên hiển thị</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  id="name"
+                  id="username"
+                  name="username"
                   type="text"
                   placeholder="Nhập tên của bạn"
-                  value={formData.name}
-                  onChange={(e) => handleChange("name", e.target.value)}
-                  className="pl-10"
+                  className={`pl-10 ${
+                    state?.fieldErrors?.username
+                      ? "border-destructive focus-visible:ring-destructive"
+                      : ""
+                  }`}
                   required
+                  disabled={isPending}
+                  aria-describedby={
+                    state?.fieldErrors?.username ? "username-error" : undefined
+                  }
                 />
               </div>
+              {state?.fieldErrors?.username && (
+                <p id="username-error" className="text-sm text-destructive">
+                  {state.fieldErrors.username}
+                </p>
+              )}
             </div>
 
             {/* Email */}
@@ -83,14 +96,26 @@ export default function RegisterPage() {
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="email@example.com"
-                  value={formData.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
-                  className="pl-10"
+                  className={`pl-10 ${
+                    state?.fieldErrors?.email
+                      ? "border-destructive focus-visible:ring-destructive"
+                      : ""
+                  }`}
                   required
+                  disabled={isPending}
+                  aria-describedby={
+                    state?.fieldErrors?.email ? "email-error" : undefined
+                  }
                 />
               </div>
+              {state?.fieldErrors?.email && (
+                <p id="email-error" className="text-sm text-destructive">
+                  {state.fieldErrors.email}
+                </p>
+              )}
             </div>
 
             {/* Password */}
@@ -100,18 +125,26 @@ export default function RegisterPage() {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  value={formData.password}
-                  onChange={(e) => handleChange("password", e.target.value)}
-                  className="pl-10 pr-10"
+                  className={`pl-10 pr-10 ${
+                    state?.fieldErrors?.password
+                      ? "border-destructive focus-visible:ring-destructive"
+                      : ""
+                  }`}
                   required
                   minLength={8}
+                  disabled={isPending}
+                  aria-describedby={
+                    state?.fieldErrors?.password ? "password-error" : undefined
+                  }
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -120,6 +153,11 @@ export default function RegisterPage() {
                   )}
                 </button>
               </div>
+              {state?.fieldErrors?.password && (
+                <p id="password-error" className="text-sm text-destructive">
+                  {state.fieldErrors.password}
+                </p>
+              )}
             </div>
 
             {/* Confirm Password */}
@@ -129,19 +167,20 @@ export default function RegisterPage() {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="confirmPassword"
+                  name="confirmPassword"
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  value={formData.confirmPassword}
-                  onChange={(e) =>
-                    handleChange("confirmPassword", e.target.value)
-                  }
                   className="pl-10 pr-10"
                   required
+                  disabled={isPending}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={
+                    showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"
+                  }
                 >
                   {showConfirmPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -156,14 +195,13 @@ export default function RegisterPage() {
             <div className="flex items-start gap-2">
               <Checkbox
                 id="terms"
-                checked={formData.agreeTerms}
-                onCheckedChange={(checked) =>
-                  handleChange("agreeTerms", checked as boolean)
-                }
+                checked={agreeTerms}
+                onCheckedChange={(checked) => setAgreeTerms(checked as boolean)}
+                disabled={isPending}
               />
               <label
                 htmlFor="terms"
-                className="text-sm text-muted-foreground leading-relaxed"
+                className="text-sm text-muted-foreground leading-relaxed cursor-pointer"
               >
                 Tôi đồng ý với{" "}
                 <Link
@@ -183,8 +221,19 @@ export default function RegisterPage() {
             </div>
 
             {/* Submit Button */}
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Đang đăng ký..." : "Đăng ký"}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isPending || !agreeTerms}
+            >
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Đang đăng ký...
+                </>
+              ) : (
+                "Đăng ký"
+              )}
             </Button>
           </form>
 
@@ -196,6 +245,7 @@ export default function RegisterPage() {
               variant="outline"
               className="w-full bg-transparent"
               type="button"
+              disabled={isPending}
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                 <path
@@ -221,6 +271,7 @@ export default function RegisterPage() {
               variant="outline"
               className="w-full bg-transparent"
               type="button"
+              disabled={isPending}
             >
               <svg
                 className="h-5 w-5 mr-2"

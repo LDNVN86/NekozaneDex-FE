@@ -4,8 +4,8 @@ import { Inter, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { ThemeProvider } from "@/shared/components/theme-provider";
 import { Header } from "@/shared/components/header";
-// import { getCurrentUser } from "@/features/auth/server/auth";
 import "./globals.css";
+import { getAuthFromCookie } from "@/features/auth/server";
 
 const inter = Inter({ subsets: ["latin", "vietnamese"] });
 const geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -46,16 +46,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // const user = await getCurrentUser();
-  const user = {
-    id: "10101010",
-    email: "HelloWorld@gmail.com",
-    username: "Bắn Tùm Lum",
-    role: "sdasdasdasd",
-    avatar_url:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRIcvRzaIFXFDH97KSJHh179QIdId4Dovl5zQ&s",
-    created_at: "currently",
-  };
+  const authResult = await getAuthFromCookie();
+  const user = authResult.success ? authResult.data : null;
 
   return (
     <html lang="vi" suppressHydrationWarning>

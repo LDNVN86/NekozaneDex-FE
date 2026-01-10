@@ -3,27 +3,28 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Mail, Lock, Book } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Book, Loader2 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Separator } from "@/shared/ui/separator";
+import { loginAction, type AuthActionState } from "@/features/auth";
 
 export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
+  const [state, formAction, isPending] = React.useActionState<
+    AuthActionState | null,
+    FormData
+  >(loginAction, null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    // Simulate login
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    router.push("/");
-  };
+  // Redirect on successful login
+  React.useEffect(() => {
+    if (state?.success) {
+      router.push("/");
+      router.refresh();
+    }
+  }, [state, router]);
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
@@ -41,7 +42,14 @@ export default function LoginPage() {
 
         {/* Login Form */}
         <div className="bg-card border rounded-xl p-6 shadow-sm">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form action={formAction} className="space-y-4">
+            {/* Error Message */}
+            {state && !state.success && (
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+                {state.message}
+              </div>
+            )}
+
             {/* Email */}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -49,14 +57,26 @@ export default function LoginPage() {
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="email@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
+                  className={`pl-10 ${
+                    state?.fieldErrors?.email
+                      ? "border-destructive focus-visible:ring-destructive"
+                      : ""
+                  }`}
                   required
+                  disabled={isPending}
+                  aria-describedby={
+                    state?.fieldErrors?.email ? "email-error" : undefined
+                  }
                 />
               </div>
+              {state?.fieldErrors?.email && (
+                <p id="email-error" className="text-sm text-destructive">
+                  {state.fieldErrors.email}
+                </p>
+              )}
             </div>
 
             {/* Password */}
@@ -74,17 +94,25 @@ export default function LoginPage() {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10"
+                  className={`pl-10 pr-10 ${
+                    state?.fieldErrors?.password
+                      ? "border-destructive focus-visible:ring-destructive"
+                      : ""
+                  }`}
                   required
+                  disabled={isPending}
+                  aria-describedby={
+                    state?.fieldErrors?.password ? "password-error" : undefined
+                  }
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -93,11 +121,23 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+              {state?.fieldErrors?.password && (
+                <p id="password-error" className="text-sm text-destructive">
+                  {state.fieldErrors.password}
+                </p>
+              )}
             </div>
 
             {/* Submit Button */}
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
+            <Button type="submit" className="w-full" disabled={isPending}>
+              {isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Đang đăng nhập...
+                </>
+              ) : (
+                "Đăng nhập"
+              )}
             </Button>
           </form>
 
@@ -109,6 +149,7 @@ export default function LoginPage() {
               variant="outline"
               className="w-full bg-transparent"
               type="button"
+              disabled={isPending}
             >
               <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
                 <path
@@ -134,6 +175,7 @@ export default function LoginPage() {
               variant="outline"
               className="w-full bg-transparent"
               type="button"
+              disabled={isPending}
             >
               <svg
                 className="h-5 w-5 mr-2"
