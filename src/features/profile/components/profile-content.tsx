@@ -2,26 +2,22 @@
 
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
-import { Heart, History, Settings } from "lucide-react";
+import { Heart, History, Settings, BookOpen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
-import { mockStories } from "@/features/story/data/mock-data";
 import { ProfileHeader, BookmarksTab, HistoryTab, SettingsTab } from "./ui";
+import type { ProfileUser, BookmarkItem, HistoryItem } from "../interfaces";
 
-const mockUser = {
-  name: "Nguyễn Văn A",
-  email: "nguyenvana@example.com",
-  avatar: "/diverse-user-avatars.png",
-  joinedAt: "2024-01-15",
-};
+interface ProfileContentProps {
+  user: ProfileUser;
+  bookmarks: BookmarkItem[];
+  history: HistoryItem[];
+}
 
-const mockBookmarks = mockStories.slice(0, 4);
-const mockHistory = mockStories.slice(1, 5).map((story, i) => ({
-  ...story,
-  lastChapter: Math.floor(Math.random() * 50) + 1,
-  lastReadAt: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
-}));
-
-export function ProfileContent() {
+export function ProfileContent({
+  user,
+  bookmarks,
+  history,
+}: ProfileContentProps) {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const defaultTab = tabParam || "bookmarks";
@@ -30,9 +26,9 @@ export function ProfileContent() {
   return (
     <div className="container mx-auto px-4 py-8">
       <ProfileHeader
-        user={mockUser}
-        bookmarkCount={mockBookmarks.length}
-        historyCount={mockHistory.length}
+        user={user}
+        bookmarkCount={bookmarks.length}
+        historyCount={history.length}
       />
 
       <Tabs
@@ -56,17 +52,51 @@ export function ProfileContent() {
         </TabsList>
 
         <TabsContent value="bookmarks">
-          <BookmarksTab bookmarks={mockBookmarks} />
+          {bookmarks.length > 0 ? (
+            <BookmarksTab bookmarks={bookmarks} />
+          ) : (
+            <EmptyState
+              icon={<Heart className="h-12 w-12" />}
+              message="Chưa có truyện đánh dấu"
+              description="Đánh dấu truyện yêu thích để đọc lại sau"
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="history">
-          <HistoryTab history={mockHistory} />
+          {history.length > 0 ? (
+            <HistoryTab history={history} />
+          ) : (
+            <EmptyState
+              icon={<BookOpen className="h-12 w-12" />}
+              message="Chưa có lịch sử đọc"
+              description="Bắt đầu đọc truyện để lưu lịch sử của bạn"
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="settings">
-          <SettingsTab user={mockUser} />
+          <SettingsTab user={user} />
         </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function EmptyState({
+  icon,
+  message,
+  description,
+}: {
+  icon: React.ReactNode;
+  message: string;
+  description: string;
+}) {
+  return (
+    <div className="text-center py-12">
+      <div className="text-muted-foreground/50 mx-auto mb-4">{icon}</div>
+      <p className="text-muted-foreground">{message}</p>
+      <p className="text-sm text-muted-foreground mt-1">{description}</p>
     </div>
   );
 }

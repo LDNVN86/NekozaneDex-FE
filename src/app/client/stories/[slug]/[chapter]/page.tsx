@@ -5,6 +5,8 @@ import {
   getChaptersByStory,
 } from "@/features/story";
 import { ChapterReaderClient } from "@/features/chapter/client/chapter-reader-client";
+import { createStoryMetadata, createNotFoundMetadata } from "@/shared/lib/seo";
+
 interface Props {
   params: Promise<{ slug: string; chapter: string }>;
 }
@@ -19,24 +21,17 @@ export async function generateMetadata({ params }: Props) {
   ]);
 
   if (!storyResult.success || !chapterResult.success) {
-    return {
-      title: "Chapter không tồn tại | Nekozanedex",
-      description: "Chapter bạn tìm kiếm không tồn tại hoặc đã bị xóa.",
-    };
+    return createNotFoundMetadata("chapter");
   }
 
   const story = storyResult.data;
   const chapterData = chapterResult.data;
 
-  return {
-    title: `${chapterData.title} - ${story.title} | Nekozanedex`,
-    description: `Đọc ${chapterData.title} của truyện ${story.title} tại Nekozanedex`,
-    openGraph: {
-      title: `${chapterData.title} - ${story.title}`,
-      description: `Đọc chương ${chapterNum} của truyện ${story.title}`,
-      images: story.cover_image_url ? [story.cover_image_url] : [],
-    },
-  };
+  return createStoryMetadata(story.title, {
+    chapterTitle: chapterData.title,
+    chapterNumber: chapterNum,
+    coverImage: story.cover_image_url,
+  });
 }
 
 export default async function ChapterPage({ params }: Props) {

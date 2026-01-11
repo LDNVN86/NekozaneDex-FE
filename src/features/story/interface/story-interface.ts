@@ -6,6 +6,8 @@ export interface Story {
   description?: string;
   cover_image_url?: string;
   author_name: string;
+  translator?: string;
+  source_url?: string;
   status: StoryStatus;
   view_count: number;
   total_chapters: number;

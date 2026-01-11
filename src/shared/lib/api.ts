@@ -23,7 +23,16 @@ export async function serverFetch<T>(
   });
 
   if (!res.ok) {
-    throw new Error(`API Error: ${res.status}`);
+    // Try to get error message from response body
+    try {
+      const errorBody = await res.json();
+      const message =
+        errorBody.message || errorBody.error || `API Error: ${res.status}`;
+      console.error(`[serverFetch] ${res.status} - ${message} - ${url}`);
+      throw new Error(message);
+    } catch {
+      throw new Error(`API Error: ${res.status}`);
+    }
   }
 
   return res.json();

@@ -2,9 +2,8 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ok, err, type Result } from "@/types/type";
+import { ok, err, type Result } from "@/response/response";
 
-// ===== Constants =====
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:9091/api";
 
@@ -15,8 +14,6 @@ const COOKIE_OPTIONS = {
   path: "/",
   maxAge: 60 * 60 * 24 * 7, // 7 days
 };
-
-// ===== Types =====
 export interface AuthActionState {
   success: boolean;
   message: string;
@@ -25,9 +22,12 @@ export interface AuthActionState {
     password?: string;
     username?: string;
   };
+  values?: {
+    email?: string;
+    username?: string;
+  };
 }
 
-// ===== Validation Helpers =====
 const validateEmail = (email: string): string | null => {
   if (!email) return "Email không được để trống";
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -48,7 +48,6 @@ const validateUsername = (username: string): string | null => {
   return null;
 };
 
-// ===== Cookie Parser Helper =====
 const parseCookieString = (
   cookieString: string
 ): { name: string; value: string } | null => {
@@ -64,7 +63,6 @@ const parseCookieString = (
   return { name, value };
 };
 
-// ===== Login Action =====
 export async function loginAction(
   _prevState: AuthActionState | null,
   formData: FormData
@@ -72,7 +70,6 @@ export async function loginAction(
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
 
-  // Validate inputs
   const fieldErrors: AuthActionState["fieldErrors"] = {};
   const emailError = validateEmail(email);
   const passwordError = validatePassword(password);
@@ -103,14 +100,31 @@ export async function loginAction(
       };
     }
 
-    // Forward Set-Cookie from backend to client
     const setCookies = response.headers.getSetCookie();
     const cookieStore = await cookies();
+
+    console.log(
+      "[loginAction] Set-Cookie headers received:",
+      setCookies.length
+    );
 
     for (const cookie of setCookies) {
       const parsed = parseCookieString(cookie);
       if (parsed) {
-        cookieStore.set(parsed.name, parsed.value, COOKIE_OPTIONS);
+        // Extract maxAge from backend cookie
+        const maxAge = extractMaxAge(cookie);
+
+        console.log(
+          "[loginAction] Setting cookie:",
+          parsed.name,
+          "maxAge:",
+          maxAge
+        );
+
+        cookieStore.set(parsed.name, parsed.value, {
+          ...COOKIE_OPTIONS,
+          maxAge: maxAge ?? COOKIE_OPTIONS.maxAge,
+        });
       }
     }
 
@@ -127,7 +141,11 @@ export async function loginAction(
   }
 }
 
-// ===== Register Action =====
+function extractMaxAge(cookieString: string): number | undefined {
+  const match = cookieString.match(/max-age=(\d+)/i);
+  return match ? parseInt(match[1], 10) : undefined;
+}
+
 export async function registerAction(
   _prevState: AuthActionState | null,
   formData: FormData
@@ -137,7 +155,6 @@ export async function registerAction(
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
 
-  // Validate inputs
   const fieldErrors: AuthActionState["fieldErrors"] = {};
   const emailError = validateEmail(email);
   const usernameError = validateUsername(username);
@@ -156,6 +173,7 @@ export async function registerAction(
       success: false,
       message: "Vui lòng kiểm tra lại thông tin",
       fieldErrors,
+      values: { email, username },
     };
   }
 
@@ -170,7 +188,11 @@ export async function registerAction(
       const errorData = await response.json().catch(() => ({}));
       return {
         success: false,
-        message: errorData.message || "Đăng ký thất bại. Vui lòng thử lại.",
+        message:
+          errorData.error ||
+          errorData.message ||
+          "Đăng ký thất bại. Vui lòng thử lại.",
+        values: { email, username },
       };
     }
 
@@ -187,11 +209,9 @@ export async function registerAction(
   }
 }
 
-// ===== Logout Action =====
 export async function logoutAction(): Promise<void> {
   const cookieStore = await cookies();
 
-  // Try to call backend logout endpoint
   const token = cookieStore.get("access_token")?.value;
   if (token) {
     try {
@@ -203,12 +223,10 @@ export async function logoutAction(): Promise<void> {
       });
     } catch (error) {
       console.error("[logoutAction] Backend logout error:", error);
-      // Continue with local logout even if backend fails
     }
   }
 
-  // Clear auth cookies
-  const authCookies = ["access_token", "refresh_token"];
+  const authCookies = ["access_token", "refresh_token", "csrf_token"];
   for (const cookieName of authCookies) {
     cookieStore.delete(cookieName);
   }
@@ -216,7 +234,6 @@ export async function logoutAction(): Promise<void> {
   redirect("/");
 }
 
-// ===== Result Pattern Actions (Alternative API) =====
 export async function loginActionResult(
   formData: FormData
 ): Promise<Result<{ message: string }, string>> {
@@ -239,7 +256,6 @@ export async function loginActionResult(
       return err(data.message || "Đăng nhập thất bại");
     }
 
-    // Forward Set-Cookie from backend to client
     const setCookies = response.headers.getSetCookie();
     const cookieStore = await cookies();
 

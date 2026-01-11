@@ -1,13 +1,17 @@
+"use client";
+
 import { Button } from "@/shared/ui/button";
-import { genres } from "@/features/story/data/mock-data";
+import type { Genre } from "@/features/story/interface/story-interface";
 
 interface ActiveFiltersProps {
+  genres: Genre[];
   selectedGenres: string[];
-  onGenreToggle: (genreId: string) => void;
+  onGenreToggle: (genreSlug: string) => void;
   onClearAll: () => void;
 }
 
 export function ActiveFilters({
+  genres,
   selectedGenres,
   onGenreToggle,
   onClearAll,
@@ -16,17 +20,17 @@ export function ActiveFilters({
 
   return (
     <div className="flex flex-wrap gap-2 mb-6">
-      {selectedGenres.map((genreId) => {
-        const genre = genres.find((g) => g.id === genreId);
+      {selectedGenres.map((genreSlug) => {
+        const genre = genres.find((g) => g.slug === genreSlug);
         return (
           <Button
-            key={genreId}
+            key={genreSlug}
             variant="secondary"
             size="sm"
-            onClick={() => onGenreToggle(genreId)}
+            onClick={() => onGenreToggle(genreSlug)}
             className="gap-1"
           >
-            {genre?.name}
+            {genre?.name || genreSlug}
             <span className="ml-1">×</span>
           </Button>
         );

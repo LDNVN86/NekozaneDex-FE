@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import { getStoryBySlug, getChaptersByStory } from "@/features/story";
-import { StoryDetailClient } from "../../../../features/story/client/story-detail-client";
+import { StoryDetailClient } from "@/features/story/client/story-detail-client";
+import { createStoryMetadata, createNotFoundMetadata } from "@/shared/lib/seo";
+
 interface Props {
-  params: Promise<{
-    slug: string;
-  }>;
+  params: Promise<{ slug: string }>;
 }
 
 export async function generateStaticParams() {
@@ -16,23 +16,14 @@ export async function generateMetadata({ params }: Props) {
   const result = await getStoryBySlug(slug);
 
   if (!result.success) {
-    return {
-      title: "Truyện không tồn tại | Nekozanedex",
-      description: "Truyện bạn tìm kiếm không tồn tại hoặc đã bị xóa.",
-    };
+    return createNotFoundMetadata("story");
   }
 
   const story = result.data;
-  return {
-    title: `${story.title} | Nekozanedex`,
-    description:
-      story.description || `Đọc truyện ${story.title} tại Nekozanedex`,
-    openGraph: {
-      title: story.title,
-      description: story.description,
-      images: story.cover_image_url ? [story.cover_image_url] : [],
-    },
-  };
+  return createStoryMetadata(story.title, {
+    description: story.description,
+    coverImage: story.cover_image_url,
+  });
 }
 
 export default async function StoryDetailPage({ params }: Props) {

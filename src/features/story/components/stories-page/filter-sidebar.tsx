@@ -5,7 +5,7 @@ import { Button } from "@/shared/ui/button";
 import { Label } from "@/shared/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
 import { Checkbox } from "@/shared/ui/checkbox";
-import { genres } from "@/features/story/data/mock-data";
+import type { Genre } from "@/features/story/interface/story-interface";
 
 const statusOptions = [
   { value: "all", label: "Tất cả" },
@@ -14,14 +14,16 @@ const statusOptions = [
 ];
 
 interface FilterSidebarProps {
+  genres: Genre[];
   selectedGenres: string[];
   status: string;
-  onGenreToggle: (genreId: string) => void;
+  onGenreToggle: (genreSlug: string) => void;
   onStatusChange: (status: string) => void;
   onApplyFilters: () => void;
 }
 
 export function FilterSidebar({
+  genres,
   selectedGenres,
   status,
   onGenreToggle,
@@ -36,6 +38,7 @@ export function FilterSidebar({
           Bộ lọc
         </h2>
         <FilterContent
+          genres={genres}
           selectedGenres={selectedGenres}
           status={status}
           onGenreToggle={onGenreToggle}
@@ -48,14 +51,16 @@ export function FilterSidebar({
 }
 
 interface FilterContentProps {
+  genres: Genre[];
   selectedGenres: string[];
   status: string;
-  onGenreToggle: (genreId: string) => void;
+  onGenreToggle: (genreSlug: string) => void;
   onStatusChange: (status: string) => void;
   onApplyFilters: () => void;
 }
 
 export function FilterContent({
+  genres,
   selectedGenres,
   status,
   onGenreToggle,
@@ -71,16 +76,15 @@ export function FilterContent({
           {genres.map((genre) => (
             <div key={genre.id} className="flex items-center gap-2">
               <Checkbox
-                id={genre.id}
-                checked={selectedGenres.includes(genre.id)}
-                onCheckedChange={() => onGenreToggle(genre.id)}
+                id={genre.slug}
+                checked={selectedGenres.includes(genre.slug)}
+                onCheckedChange={() => onGenreToggle(genre.slug)}
               />
               <label
-                htmlFor={genre.id}
-                className="text-sm cursor-pointer flex-1 flex justify-between"
+                htmlFor={genre.slug}
+                className="text-sm cursor-pointer flex-1"
               >
-                <span>{genre.name}</span>
-                <span className="text-muted-foreground">({genre.count})</span>
+                {genre.name}
               </label>
             </div>
           ))}

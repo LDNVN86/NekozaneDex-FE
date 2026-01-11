@@ -70,6 +70,7 @@ export default function RegisterPage() {
                   name="username"
                   type="text"
                   placeholder="Nhập tên của bạn"
+                  defaultValue={state?.values?.username}
                   className={`pl-10 ${
                     state?.fieldErrors?.username
                       ? "border-destructive focus-visible:ring-destructive"
@@ -99,6 +100,7 @@ export default function RegisterPage() {
                   name="email"
                   type="email"
                   placeholder="email@example.com"
+                  defaultValue={state?.values?.email}
                   className={`pl-10 ${
                     state?.fieldErrors?.email
                       ? "border-destructive focus-visible:ring-destructive"

@@ -1,5 +1,5 @@
 import { serverFetch } from "@/shared/lib/api";
-import { ok, err, type Result } from "@/types/type";
+import { ok, err, type Result } from "@/response/response";
 import type {
   Story,
   Chapter,

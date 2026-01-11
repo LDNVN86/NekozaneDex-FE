@@ -1,9 +1,17 @@
 import { cookies } from "next/headers";
 import type { AuthUser } from "../types/auth";
-import { ok, err, type Result } from "@/types/type";
+import { ok, err, type Result } from "@/response/response";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:9091/api";
+
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  path: "/",
+  maxAge: 60 * 60 * 24 * 7,
+};
 
 class AuthClient {
   private static instance: AuthClient;
@@ -30,6 +38,11 @@ class AuthClient {
     return cookieStore.get("access_token")?.value ?? null;
   }
 
+  async getRefreshToken(): Promise<string | null> {
+    const cookieStore = await cookies();
+    return cookieStore.get("refresh_token")?.value ?? null;
+  }
+
   async fetch<T>(
     endpoint: string,
     options?: RequestInit
@@ -52,7 +65,8 @@ class AuthClient {
         const errorData = await res
           .json()
           .catch(() => ({ message: "Unknown error" }));
-        return err(errorData.message || `API Error: ${res.status}`);
+        // Return status code in error for upstream handling
+        return err(`${res.status}: ${errorData.message || "API Error"}`);
       }
 
       const data = await res.json();
@@ -64,18 +78,35 @@ class AuthClient {
 
   async getCurrentUser(): Promise<Result<AuthUser, string>> {
     const token = await this.getAccessToken();
+    const refreshToken = await this.getRefreshToken();
 
-    if (!token) {
-      return err("No access token found");
+    // No tokens at all
+    if (!token && !refreshToken) {
+      return err("Not authenticated");
     }
 
-    const result = await this.fetch<{ data: AuthUser }>("/auth/profile");
+    // If we have access_token, try to fetch profile
+    if (token) {
+      const result = await this.fetch<{ data: AuthUser }>("/auth/profile");
 
-    if (!result.success) {
+      if (result.success) {
+        return ok(result.data.data);
+      }
+
+      // If 401, the token is expired
+      if (result.error.startsWith("401")) {
+        console.log("[Auth] Access token expired, need refresh");
+        // Can't refresh here (no cookie write in Server Component)
+        // Just return error - proxy should have handled this
+        return err("Session expired");
+      }
+
       return err(result.error);
     }
 
-    return ok(result.data.data);
+    // No access_token but have refresh_token
+    // Proxy should have refreshed, but maybe it didn't run for this path
+    return err("No access token - refresh needed");
   }
 }
 

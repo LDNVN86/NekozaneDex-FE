@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { History, Clock, Trash2 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
@@ -27,38 +29,35 @@ export function HistoryTab({ history }: HistoryTabProps) {
       <CardContent>
         {history.length > 0 ? (
           <div className="space-y-4">
-            {history.map((story) => (
+            {history.map((item) => (
               <div
-                key={story.id}
+                key={item.id}
                 className="flex items-center gap-4 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
               >
                 <img
-                  src={
-                    story.coverUrl ||
-                    `/placeholder.svg?height=80&width=60&query=${story.title} cover`
-                  }
-                  alt={story.title}
+                  src={item.story.cover_image_url || "/placeholder.svg"}
+                  alt={item.story.title}
                   className="w-14 h-20 object-cover rounded-lg"
                 />
                 <div className="flex-1 min-w-0">
                   <Link
-                    href={`/client/stories/${story.slug}`}
+                    href={`/client/stories/${item.story.slug}`}
                     className="font-medium hover:text-primary line-clamp-1"
                   >
-                    {story.title}
+                    {item.story.title}
                   </Link>
                   <p className="text-sm text-muted-foreground">
-                    Đọc đến: Chương {story.lastChapter}
+                    Đọc đến: Chương {item.chapter_number}
                   </p>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                     <Clock className="h-3 w-3" />
-                    {new Date(story.lastReadAt).toLocaleDateString("vi-VN")}
+                    {new Date(item.last_read_at).toLocaleDateString("vi-VN")}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button size="sm" asChild>
                     <Link
-                      href={`/client/stories/${story.slug}/${story.lastChapter}`}
+                      href={`/client/stories/${item.story.slug}/${item.chapter_number}`}
                     >
                       Đọc tiếp
                     </Link>

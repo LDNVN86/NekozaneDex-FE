@@ -18,6 +18,8 @@ import {
 } from "@/shared/ui/sheet";
 import { FilterContent } from "./filter-sidebar";
 
+import type { Genre } from "@/features/story/interface/story-interface";
+
 const sortOptions = [
   { value: "latest", label: "Mới cập nhật" },
   { value: "views", label: "Lượt xem" },
@@ -29,11 +31,12 @@ interface StoriesHeaderProps {
   totalResults: number;
   sort: string;
   viewMode: "grid" | "list";
+  genres: Genre[];
   selectedGenres: string[];
   status: string;
   onSortChange: (sort: string) => void;
   onViewModeChange: (mode: "grid" | "list") => void;
-  onGenreToggle: (genreId: string) => void;
+  onGenreToggle: (genreSlug: string) => void;
   onStatusChange: (status: string) => void;
   onApplyFilters: () => void;
 }
@@ -42,6 +45,7 @@ export function StoriesHeader({
   totalResults,
   sort,
   viewMode,
+  genres,
   selectedGenres,
   status,
   onSortChange,
@@ -55,7 +59,7 @@ export function StoriesHeader({
       <div>
         <h1 className="text-2xl font-bold">Danh sách truyện</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {totalResults.toLocaleString("vi-VN")} kết quả
+          {(totalResults ?? 0).toLocaleString("vi-VN")} kết quả
         </p>
       </div>
 
@@ -78,6 +82,7 @@ export function StoriesHeader({
             </SheetHeader>
             <div className="mt-6">
               <FilterContent
+                genres={genres}
                 selectedGenres={selectedGenres}
                 status={status}
                 onGenreToggle={onGenreToggle}

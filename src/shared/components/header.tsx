@@ -34,6 +34,7 @@ import {
   SheetTitle,
 } from "@/shared/ui/sheet";
 import { cn } from "@/shared/lib/utils";
+import { logoutAction } from "@/features/auth/actions/auth-actions";
 import type { AuthUser } from "@/features/auth/types/auth";
 
 const navigation = [
@@ -56,29 +57,21 @@ export function Header({ user }: HeaderProps) {
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
   const isLoggedIn = Boolean(user);
 
-  const apiBaseUrl =
-    process.env.NEXT_PUBLIC_API_BASE_URL ??
-    "http://api.local.shopacgiare.io.vn:9091";
-
   React.useEffect(() => {
     setMounted(true);
   }, []);
 
   const handleLogout = async () => {
-    if (isLoggingOut) {
-      return;
-    }
+    if (isLoggingOut) return;
 
     setIsLoggingOut(true);
     try {
-      await fetch(`${apiBaseUrl}/api/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
-    } finally {
+      await logoutAction();
+    } catch (error) {
+      // logoutAction redirects, so this will only run if there's an error
+      console.error("Logout error:", error);
       setIsLoggingOut(false);
       router.refresh();
-      router.push("/");
     }
   };
 
@@ -129,21 +122,26 @@ export function Header({ user }: HeaderProps) {
           {/* Right Actions */}
           <div className="flex items-center gap-2">
             {/* Theme Toggle */}
-            {mounted && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="shrink-0"
-              >
-                {theme === "dark" ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
-                <span className="sr-only">Chuyển đổi theme</span>
-              </Button>
-            )}
+            {/* Theme Toggle - Always show button to prevent layout shift */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() =>
+                mounted && setTheme(theme === "dark" ? "light" : "dark")
+              }
+              className="shrink-0"
+              disabled={!mounted}
+            >
+              {!mounted ? (
+                // Placeholder icon while hydrating (use Moon as default to match common dark theme)
+                <Moon className="h-5 w-5 animate-pulse" />
+              ) : theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+              <span className="sr-only">Chuyển đổi theme</span>
+            </Button>
 
             {/* User Menu */}
             <DropdownMenu>

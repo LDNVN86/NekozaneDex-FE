@@ -2,3 +2,8 @@ export { ProfileHeader } from "./profile-header";
 export { BookmarksTab } from "./bookmarks-tab";
 export { HistoryTab } from "./history-tab";
 export { SettingsTab } from "./settings-tab";
+export { AvatarUpload } from "./avatar-upload";
+export { ProfileInfoCard } from "./profile-info-card";
+export { ChangePasswordCard } from "./change-password-card";
+export { NotificationsCard } from "./notifications-card";
+export { DangerZoneCard } from "./danger-zone-card";

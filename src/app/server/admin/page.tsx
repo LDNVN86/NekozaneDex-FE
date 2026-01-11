@@ -1,5 +1,11 @@
 import { getAuthFromCookie, hasRole } from "@/features/auth/server";
 import { redirect } from "next/navigation";
+import AdminDashboard from "./admin-dashboard";
+
+export const metadata = {
+  title: "Admin Dashboard | Nekozanedex",
+  description: "Quản trị hệ thống Nekozanedex",
+};
 
 export default async function AdminPage() {
   const result = await getAuthFromCookie();
@@ -14,10 +20,5 @@ export default async function AdminPage() {
     redirect("/");
   }
 
-  return (
-    <div>
-      <h1>Admin Page Dashboard</h1>
-      <p>Xin Chào, {user.username}</p>
-    </div>
-  );
+  return <AdminDashboard user={user} />;
 }

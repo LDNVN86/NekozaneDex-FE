@@ -2,8 +2,11 @@ import type React from "react";
 import type { Metadata, Viewport } from "next";
 import { Inter, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import { headers } from "next/headers";
 import { ThemeProvider } from "@/shared/components/theme-provider";
+import { TokenRefreshProvider } from "@/shared/components/token-refresh-provider";
 import { Header } from "@/shared/components/header";
+import { Toaster } from "@/shared/ui/sonner";
 import "./globals.css";
 import { getAuthFromCookie } from "@/features/auth/server";
 
@@ -49,6 +52,11 @@ export default async function RootLayout({
   const authResult = await getAuthFromCookie();
   const user = authResult.success ? authResult.data : null;
 
+  // Get current pathname to conditionally hide header for admin routes
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || "";
+  const isAdminRoute = pathname.startsWith("/server/admin");
+
   return (
     <html lang="vi" suppressHydrationWarning>
       <body className={`font-sans antialiased`}>
@@ -58,8 +66,13 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Header user={user} />
-          <main className="min-h-screen">{children}</main>
+          <TokenRefreshProvider>
+            {!isAdminRoute && <Header user={user} />}
+            <main className={isAdminRoute ? "" : "min-h-screen"}>
+              {children}
+            </main>
+            <Toaster position="bottom-right" richColors />
+          </TokenRefreshProvider>
         </ThemeProvider>
         <Analytics />
       </body>
