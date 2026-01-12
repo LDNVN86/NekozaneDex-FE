@@ -25,7 +25,7 @@ export async function uploadImageAction(
       return { success: false, error: "Chưa đăng nhập" };
     }
 
-    const response = await fetch(`${API_BASE_URL}/admin/upload`, {
+    const response = await fetch(`${API_BASE_URL}/admin/media`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
