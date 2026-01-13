@@ -19,12 +19,6 @@ export function getTokenExpiry(token: string): number | null {
   return payload.exp;
 }
 
-/**
- * Check if token is valid with optional buffer time
- * @param token JWT token
- * @param bufferSeconds Seconds before actual expiry to consider invalid (default 60)
- * @returns true if token is valid and not expiring soon
- */
 export function isTokenValid(token: string, bufferSeconds = 60): boolean {
   const exp = getTokenExpiry(token);
   if (!exp) return false;

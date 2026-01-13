@@ -1,11 +1,7 @@
 import "server-only";
 import { authFetch, getAccessToken } from "@/shared/lib/server-auth";
-import { type Result, ok, err } from "@/response/response";
+import { type Result, ok, err } from "@/shared/lib/result";
 import type { Story } from "@/features/story/interface/story-interface";
-
-// ============================================================================
-// Types
-// ============================================================================
 
 export interface Bookmark {
   id: string;
@@ -22,10 +18,6 @@ export interface BookmarksResponse {
   total: number;
   total_pages: number;
 }
-
-// ============================================================================
-// Server API Functions
-// ============================================================================
 
 /**
  * Get user's bookmarks with pagination

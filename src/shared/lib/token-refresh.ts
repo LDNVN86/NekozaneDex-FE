@@ -10,10 +10,6 @@ interface RefreshResponse {
   };
 }
 
-/**
- * Attempt to refresh the access token using the refresh token
- * @returns New access token or null if refresh failed
- */
 export async function refreshAccessToken(): Promise<string | null> {
   try {
     const cookieStore = await cookies();
@@ -47,8 +43,6 @@ export async function refreshAccessToken(): Promise<string | null> {
       return null;
     }
 
-    // Note: In Server Actions, we can't directly set cookies
-    // The new token needs to be passed back and set via response
     console.log("[Token Refresh] Successfully refreshed access token");
     return newAccessToken;
   } catch (error) {
@@ -57,12 +51,6 @@ export async function refreshAccessToken(): Promise<string | null> {
   }
 }
 
-/**
- * Get a valid access token, refreshing if necessary
- * @param currentToken Current access token
- * @param bufferSeconds Seconds before expiry to trigger refresh
- * @returns Valid access token or null
- */
 export async function getValidAccessToken(
   currentToken: string | undefined,
   bufferSeconds = 60
@@ -71,14 +59,12 @@ export async function getValidAccessToken(
     return await refreshAccessToken();
   }
 
-  // Import dynamically to avoid circular dependencies
   const { isTokenValid } = await import("./token-utils");
 
   if (isTokenValid(currentToken, bufferSeconds)) {
     return currentToken;
   }
 
-  // Token is expired or expiring soon, try to refresh
   console.log("[Token] Access token expiring soon, refreshing...");
   return await refreshAccessToken();
 }

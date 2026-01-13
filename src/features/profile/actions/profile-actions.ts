@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { authFetch } from "@/shared/lib/server-auth";
-import { type Result, ok, err } from "@/response/response";
+import { type Result, ok, err } from "@/shared/lib/result";
 
 // ============================================================================
 // Types
@@ -29,10 +29,12 @@ export async function updateProfileAction(
 ): Promise<Result<ProfileData>> {
   const username = formData.get("username") as string | null;
   const avatarUrl = formData.get("avatar_url") as string | null;
+  const oldAvatarUrl = formData.get("old_avatar_url") as string | null;
 
   const body: Record<string, string> = {};
   if (username?.trim()) body.username = username.trim();
   if (avatarUrl?.trim()) body.avatar_url = avatarUrl.trim();
+  if (oldAvatarUrl?.trim()) body.old_avatar_url = oldAvatarUrl.trim();
 
   if (Object.keys(body).length === 0) {
     return err("Không có thông tin để cập nhật");

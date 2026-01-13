@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { getAccessToken as getServerAccessToken } from "@/shared/lib/server-auth";
 import type { AuthUser } from "../types/auth";
-import { ok, err, type Result } from "@/response/response";
+import { ok, err, type Result } from "@/shared/lib/result";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:9091/api";

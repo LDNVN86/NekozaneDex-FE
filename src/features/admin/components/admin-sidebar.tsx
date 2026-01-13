@@ -6,11 +6,12 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   BookOpen,
-  FileText,
+  Tag,
   Users,
   Settings,
   ChevronRight,
   LogOut,
+  FileText,
 } from "lucide-react";
 
 import { cn } from "@/shared/lib/utils";
@@ -63,7 +64,7 @@ const navMain = [
   {
     title: "Thể loại",
     url: "/server/admin/genres",
-    icon: FileText,
+    icon: Tag,
   },
   {
     title: "Người dùng",

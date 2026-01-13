@@ -8,6 +8,13 @@ import {
   deleteStory as apiDeleteStory,
 } from "../server";
 import type { StoryFormState, StoryFormData, StoryStatus } from "../interface";
+import {
+  isValidUrl,
+  validateRequired,
+  validateMaxLength,
+  hasErrors,
+  type ValidationErrors,
+} from "@/shared/lib/validation";
 
 function parseFormData(formData: FormData): StoryFormData {
   return {
@@ -25,13 +32,15 @@ function parseFormData(formData: FormData): StoryFormData {
 }
 
 function validateFormData(data: StoryFormData): StoryFormState | null {
-  const errors: StoryFormState["fieldErrors"] = {};
+  const errors: ValidationErrors<StoryFormData> = {};
 
-  if (!data.title || data.title.trim().length < 2) {
+  const titleMinError = validateRequired(data.title, 2);
+  if (titleMinError) {
     errors.title = "Tên truyện phải có ít nhất 2 ký tự";
   }
 
-  if (data.title && data.title.length > 255) {
+  const titleMaxError = validateMaxLength(data.title, 255);
+  if (titleMaxError) {
     errors.title = "Tên truyện không được vượt quá 255 ký tự";
   }
 
@@ -39,7 +48,7 @@ function validateFormData(data: StoryFormData): StoryFormState | null {
     errors.source_url = "Link nguồn không hợp lệ";
   }
 
-  if (Object.keys(errors).length > 0) {
+  if (hasErrors(errors)) {
     return {
       success: false,
       message: "Vui lòng kiểm tra lại thông tin",
@@ -49,15 +58,6 @@ function validateFormData(data: StoryFormData): StoryFormState | null {
   }
 
   return null;
-}
-
-function isValidUrl(string: string): boolean {
-  try {
-    new URL(string);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 export async function createStoryAction(

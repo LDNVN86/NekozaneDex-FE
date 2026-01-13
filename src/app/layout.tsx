@@ -5,10 +5,8 @@ import { Analytics } from "@vercel/analytics/next";
 import { headers } from "next/headers";
 import { ThemeProvider } from "@/shared/components/theme-provider";
 import { TokenRefreshProvider } from "@/shared/components/token-refresh-provider";
-import { Header } from "@/shared/components/header";
 import { Toaster } from "@/shared/ui/sonner";
 import "./globals.css";
-import { getAuthFromCookie } from "@/features/auth/server";
 
 const inter = Inter({ subsets: ["latin", "vietnamese"] });
 const geistMono = Geist_Mono({ subsets: ["latin"] });
@@ -49,13 +47,6 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const authResult = await getAuthFromCookie();
-  const user = authResult.success ? authResult.data : null;
-
-  const headersList = await headers();
-  const pathname = headersList.get("x-pathname") || "";
-  const isAdminRoute = pathname.startsWith("/server/admin");
-
   return (
     <html lang="vi" suppressHydrationWarning>
       <body className={`font-sans antialiased`}>
@@ -66,10 +57,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <TokenRefreshProvider>
-            {!isAdminRoute && <Header user={user} />}
-            <main className={isAdminRoute ? "" : "min-h-screen"}>
-              {children}
-            </main>
+            {children}
             <Toaster position="bottom-right" richColors />
           </TokenRefreshProvider>
         </ThemeProvider>

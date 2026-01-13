@@ -2,65 +2,82 @@
 
 import * as React from "react";
 import Image from "next/image";
-import { Upload, X, Loader2 } from "lucide-react";
+import { Upload, X, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
-import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
-import { uploadImageAction } from "../../actions/upload-actions";
+import { Alert, AlertDescription } from "@/shared/ui/alert";
+import { ImageCropModal } from "@/shared/components/image-crop-modal";
 
 interface ImageUploadProps {
   name: string;
-  label: string;
+  label?: string;
   defaultValue?: string;
+  onFileChange?: (file: Blob | null) => void;
+  aspectRatio?: number;
 }
 
-export function ImageUpload({ name, label, defaultValue }: ImageUploadProps) {
+export function ImageUpload({
+  name,
+  defaultValue,
+  onFileChange,
+  aspectRatio = 2 / 3, // Book cover aspect ratio
+}: ImageUploadProps) {
   const [imageUrl, setImageUrl] = React.useState<string | undefined>(
     defaultValue
   );
-  const [isUploading, setIsUploading] = React.useState(false);
+  const [pendingBlob, setPendingBlob] = React.useState<Blob | null>(null);
   const [isDragging, setIsDragging] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const [cropModalOpen, setCropModalOpen] = React.useState(false);
+  const [selectedImage, setSelectedImage] = React.useState<string>("");
   const inputRef = React.useRef<HTMLInputElement>(null);
 
-  const uploadToCloudinary = async (file: File) => {
-    setIsUploading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
-      formData.append("folder", "covers");
-
-      const result = await uploadImageAction(formData);
-
-      if (!result.success) {
-        throw new Error(result.error || "Upload failed");
-      }
-
-      setImageUrl(result.url);
-      toast.success("Upload ảnh thành công!");
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Không thể upload ảnh"
-      );
-    } finally {
-      setIsUploading(false);
+  // Create preview URL from blob
+  const previewUrl = React.useMemo(() => {
+    if (pendingBlob) {
+      return URL.createObjectURL(pendingBlob);
     }
-  };
+    return imageUrl;
+  }, [pendingBlob, imageUrl]);
+
+  // Cleanup blob URL on unmount
+  React.useEffect(() => {
+    return () => {
+      if (pendingBlob) {
+        URL.revokeObjectURL(URL.createObjectURL(pendingBlob));
+      }
+    };
+  }, [pendingBlob]);
 
   const handleFile = (file: File) => {
-    if (!file.type.startsWith("image/")) {
-      toast.error("Chỉ chấp nhận file ảnh");
+    const allowedFormats = ["image/png", "image/jpeg", "image/webp"];
+    const maxSize = 10 * 1024 * 1024; // 10MB
+
+    setError("");
+
+    if (!allowedFormats.includes(file.type)) {
+      setError("Chỉ hỗ trợ PNG, JPG, WEBP");
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error("File quá lớn (tối đa 10MB)");
+    if (file.size > maxSize) {
+      setError("Tệp không được vượt quá 10MB");
       return;
     }
 
-    uploadToCloudinary(file);
+    // Open crop modal
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setSelectedImage(reader.result as string);
+      setCropModalOpen(true);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCropComplete = (croppedBlob: Blob) => {
+    setCropModalOpen(false);
+    setPendingBlob(croppedBlob);
+    onFileChange?.(croppedBlob);
+    toast.info("Ảnh đã sẵn sàng. Bấm 'Lưu' để upload.");
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -82,92 +99,134 @@ export function ImageUpload({ name, label, defaultValue }: ImageUploadProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleFile(file);
+    // Reset input
+    if (inputRef.current) inputRef.current.value = "";
   };
 
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
+    setPendingBlob(null);
     setImageUrl(undefined);
-    if (inputRef.current) inputRef.current.value = "";
+    setError("");
+    onFileChange?.(null);
   };
 
-  const handleClick = () => {
-    if (!isUploading) {
-      inputRef.current?.click();
-    }
+  const handleChangeImage = () => {
+    inputRef.current?.click();
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">{label}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div
-          className={`
-            relative border-2 border-dashed rounded-lg p-4 text-center
-            transition-colors
-            ${isUploading ? "cursor-wait opacity-70" : "cursor-pointer"}
-            ${
-              isDragging
-                ? "border-primary bg-primary/5"
-                : "border-muted-foreground/25"
-            }
-            ${imageUrl || isUploading ? "" : "hover:bg-muted/50"}
-          `}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={handleClick}
-        >
-          {isUploading ? (
-            <div className="py-8 flex flex-col items-center gap-2">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Đang upload...</p>
-            </div>
-          ) : imageUrl ? (
-            <div className="relative">
-              <div className="relative w-full h-40">
-                <Image
-                  src={imageUrl}
-                  alt="Preview"
-                  fill
-                  className="object-cover rounded"
-                  unoptimized
-                />
+    <>
+      <div className="space-y-3">
+        {/* Upload Zone - only show when no preview */}
+        {!previewUrl && (
+          <div
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={() => inputRef.current?.click()}
+            className={`
+              relative border-2 border-dashed rounded-lg p-6 text-center transition-all cursor-pointer
+              ${
+                isDragging
+                  ? "border-violet-500 bg-violet-500/10"
+                  : "border-border/50 hover:border-violet-400/50 hover:bg-violet-500/5"
+              }
+            `}
+          >
+            <Upload className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+            <p className="text-foreground font-medium text-sm mb-1">
+              Kéo thả hoặc click
+            </p>
+            <p className="text-muted-foreground text-xs">
+              PNG, JPG, WEBP (max 10MB)
+            </p>
+          </div>
+        )}
+
+        {error && (
+          <Alert className="bg-destructive/20 border-destructive/50">
+            <AlertDescription className="text-destructive text-sm">
+              {error}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Image Preview - Full aspect ratio display */}
+        {previewUrl && (
+          <div className="space-y-2">
+            <div
+              className="relative rounded-lg overflow-hidden bg-muted/30 border border-border/30"
+              style={{ aspectRatio: `${aspectRatio}` }}
+            >
+              <Image
+                src={previewUrl}
+                alt="Cover preview"
+                fill
+                className="object-cover"
+                unoptimized
+              />
+              {/* Overlay on hover */}
+              <div className="absolute inset-0 bg-black/60 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleChangeImage}
+                  className="bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-lg px-3 py-2 text-sm text-white flex items-center gap-2 transition-colors"
+                >
+                  <ImageIcon className="w-4 h-4" />
+                  Đổi ảnh
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  className="bg-red-500/80 hover:bg-red-600 rounded-lg px-3 py-2 text-sm text-white flex items-center gap-2 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                  Xóa
+                </button>
               </div>
-              <Button
-                type="button"
-                variant="destructive"
-                size="icon"
-                className="absolute top-2 right-2 h-6 w-6"
-                onClick={handleClear}
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
-          ) : (
-            <div className="py-8">
-              <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">
-                Kéo thả hoặc click để upload
+
+            {pendingBlob && (
+              <p className="text-xs text-amber-400 flex items-center gap-1">
+                📎 Chờ lưu ({(pendingBlob.size / 1024).toFixed(0)} KB)
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                PNG, JPG, WEBP (max 10MB)
-              </p>
-            </div>
-          )}
-          <Input
-            ref={inputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleChange}
-            disabled={isUploading}
-          />
-          {/* Hidden input to submit the Cloudinary URL */}
-          <input type="hidden" name={`${name}_url`} value={imageUrl || ""} />
-        </div>
-      </CardContent>
-    </Card>
+            )}
+          </div>
+        )}
+
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          onChange={handleChange}
+          className="hidden"
+        />
+
+        {/* Hidden input for existing URL (when no new file selected) */}
+        <input
+          type="hidden"
+          name={`${name}_url`}
+          value={pendingBlob ? "" : imageUrl || ""}
+        />
+
+        {/* Hidden input to signal that we have a pending file */}
+        <input
+          type="hidden"
+          name={`${name}_has_pending`}
+          value={pendingBlob ? "true" : "false"}
+        />
+      </div>
+
+      {/* Crop Modal */}
+      <ImageCropModal
+        isOpen={cropModalOpen}
+        onClose={() => setCropModalOpen(false)}
+        imageSrc={selectedImage}
+        onCropComplete={handleCropComplete}
+        aspectRatio={aspectRatio}
+        cropShape="rect"
+      />
+    </>
   );
 }

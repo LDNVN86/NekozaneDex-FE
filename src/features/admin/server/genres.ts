@@ -1,6 +1,6 @@
 import "server-only";
 import { serverFetch } from "@/shared/lib/api";
-import { ok, err, type Result } from "@/response/response";
+import { ok, err, type Result } from "@/shared/lib/result";
 import type { Genre, SingleResponse } from "../interface";
 
 export async function getAllGenres(): Promise<Result<Genre[]>> {

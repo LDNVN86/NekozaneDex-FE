@@ -21,7 +21,6 @@ export function EditStoryPageClient({
   story,
   genres,
 }: EditStoryPageClientProps) {
-  // Bind storyId to the action
   const boundAction = async (
     prevState: StoryFormState,
     formData: FormData

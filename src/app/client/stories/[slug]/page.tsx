@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getStoryBySlug, getChaptersByStory } from "@/features/story";
 import { StoryDetailClient } from "@/features/story/client/story-detail-client";
 import { createStoryMetadata, createNotFoundMetadata } from "@/shared/lib/seo";
+import { stripHtml } from "@/shared/lib/html-utils";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -21,7 +22,7 @@ export async function generateMetadata({ params }: Props) {
 
   const story = result.data;
   return createStoryMetadata(story.title, {
-    description: story.description,
+    description: stripHtml(story.description || ""),
     coverImage: story.cover_image_url,
   });
 }

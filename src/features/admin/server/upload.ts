@@ -1,7 +1,7 @@
 import "server-only";
 import { serverFetch } from "@/shared/lib/api";
 import { getAuthHeaders } from "@/shared/lib/server-auth";
-import { ok, err, type Result } from "@/response/response";
+import { ok, err, type Result } from "@/shared/lib/result";
 import type { SingleResponse } from "../interface";
 
 export interface UploadResponse {

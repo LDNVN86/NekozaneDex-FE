@@ -9,6 +9,11 @@ import {
   publishChapter as apiPublishChapter,
 } from "../server";
 import type { ChapterFormState, ChapterFormData } from "../interface";
+import {
+  validateRequired,
+  hasErrors,
+  type ValidationErrors,
+} from "@/shared/lib/validation";
 
 function parseFormData(formData: FormData): ChapterFormData {
   const imagesRaw = formData.get("images") as string;
@@ -32,9 +37,10 @@ function parseFormData(formData: FormData): ChapterFormData {
 }
 
 function validateFormData(data: ChapterFormData): ChapterFormState | null {
-  const errors: ChapterFormState["fieldErrors"] = {};
+  const errors: ValidationErrors<ChapterFormData> = {};
 
-  if (!data.title || data.title.trim().length < 1) {
+  const titleError = validateRequired(data.title);
+  if (titleError) {
     errors.title = "Tiêu đề chapter không được để trống";
   }
 
@@ -42,7 +48,7 @@ function validateFormData(data: ChapterFormData): ChapterFormState | null {
     errors.images = "Vui lòng thêm ít nhất 1 ảnh";
   }
 
-  if (Object.keys(errors).length > 0) {
+  if (hasErrors(errors)) {
     return {
       success: false,
       message: "Vui lòng kiểm tra lại thông tin",

@@ -1,9 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
-import { Label } from "@/shared/ui/label";
-import { Switch } from "@/shared/ui/switch";
 import {
   Select,
   SelectContent,
@@ -11,12 +8,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
+import { Switch } from "@/shared/ui/switch";
+import { Label } from "@/shared/ui/label";
 import { type StoryStatus, STORY_STATUS_OPTIONS } from "../../interface";
 
 interface StatusSelectProps {
   defaultStatus?: StoryStatus;
   defaultPublished?: boolean;
 }
+
+const STATUS_COLORS: Record<StoryStatus, string> = {
+  ongoing: "bg-blue-500",
+  completed: "bg-green-500",
+  hiatus: "bg-yellow-500",
+};
 
 export function StatusSelect({
   defaultStatus = "ongoing",
@@ -26,52 +31,56 @@ export function StatusSelect({
   const [isPublished, setIsPublished] = React.useState(defaultPublished);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">Trạng thái</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Status select */}
-        <div className="space-y-2">
-          <Label htmlFor="status">Tình trạng</Label>
-          <Select
-            name="status"
-            value={status}
-            onValueChange={(v) => setStatus(v as StoryStatus)}
-          >
-            <SelectTrigger id="status">
+    <div className="space-y-4">
+      {/* Status Select */}
+      <div className="space-y-2">
+        <Label htmlFor="status" className="text-xs text-muted-foreground">
+          Trạng thái
+        </Label>
+        <Select
+          name="status"
+          value={status}
+          onValueChange={(v) => setStatus(v as StoryStatus)}
+        >
+          <SelectTrigger id="status" className="h-10 bg-input border-border/30">
+            <div className="flex items-center gap-2">
+              <span
+                className={`w-2 h-2 rounded-full ${STATUS_COLORS[status]}`}
+              />
               <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STORY_STATUS_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            {STORY_STATUS_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-        {/* Publish toggle */}
-        <div className="flex items-center justify-between">
-          <div>
-            <Label htmlFor="is_published">Xuất bản</Label>
-            <p className="text-xs text-muted-foreground">
-              Hiển thị công khai trên trang
-            </p>
-          </div>
-          <input
-            type="hidden"
-            name="is_published"
-            value={isPublished ? "true" : "false"}
-          />
-          <Switch
-            id="is_published"
-            checked={isPublished}
-            onCheckedChange={setIsPublished}
-          />
-        </div>
-      </CardContent>
-    </Card>
+      {/* Publish Toggle */}
+      <div className="flex items-center justify-between p-3 bg-input/50 rounded-lg border border-border/30">
+        <Label htmlFor="is_published" className="text-sm cursor-pointer">
+          Công khai
+        </Label>
+        <input
+          type="hidden"
+          name="is_published"
+          value={isPublished ? "true" : "false"}
+        />
+        <Switch
+          id="is_published"
+          checked={isPublished}
+          onCheckedChange={setIsPublished}
+        />
+      </div>
+
+      {/* Last Updated */}
+      <p className="text-xs text-muted-foreground">
+        Cập nhật: {new Date().toLocaleDateString("vi-VN")}
+      </p>
+    </div>
   );
 }

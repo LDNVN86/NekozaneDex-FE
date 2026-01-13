@@ -1,6 +1,9 @@
-import { Input } from "@/shared/ui/input";
-import { Textarea } from "@/shared/ui/textarea";
-import { Label } from "@/shared/ui/label";
+"use client";
+
+import * as React from "react";
+import { User, Globe, FileText } from "lucide-react";
+import { RichTextEditor } from "@/shared/components/rich-text-editor";
+import { cleanHtml } from "@/shared/lib/html-utils";
 import type {
   AdminStory,
   StoryFieldErrors,
@@ -18,6 +21,10 @@ export function StoryFormFields({
   errors,
   values,
 }: StoryFormFieldsProps) {
+  const [description, setDescription] = React.useState(
+    values?.description || story?.description || ""
+  );
+
   const getValue = (key: keyof StoryFormData): string => {
     if (values?.[key] !== undefined) {
       const val = values[key];
@@ -29,81 +36,130 @@ export function StoryFormFields({
     }
     return "";
   };
+
   return (
     <div className="space-y-4">
-      {/* Title */}
-      <div className="space-y-2">
-        <Label htmlFor="title">
-          Tên truyện <span className="text-destructive">*</span>
-        </Label>
-        <Input
-          id="title"
-          name="title"
-          defaultValue={getValue("title") as string}
-          placeholder="Nhập tên truyện"
-          required
-        />
+      {/* Title Field */}
+      <div>
+        <label
+          htmlFor="title"
+          className="block text-xs font-medium text-muted-foreground mb-1.5"
+        >
+          Tiêu đề <span className="text-violet-400">*</span>
+        </label>
+        <div className="relative">
+          <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            id="title"
+            name="title"
+            type="text"
+            defaultValue={getValue("title")}
+            placeholder="Nhập tiêu đề truyện"
+            required
+            className="w-full pl-10 pr-4 py-2.5 bg-input border border-border/30 rounded-lg text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all"
+          />
+        </div>
         {errors?.title && (
-          <p className="text-sm text-destructive">{errors.title}</p>
+          <p className="text-destructive text-xs mt-1">{errors.title}</p>
         )}
       </div>
 
-      {/* Description */}
-      <div className="space-y-2">
-        <Label htmlFor="description">Mô tả</Label>
-        <Textarea
-          id="description"
-          name="description"
-          defaultValue={getValue("description") as string}
+      {/* Description Field - Rich Text Editor */}
+      <div>
+        <label
+          htmlFor="description"
+          className="block text-xs font-medium text-muted-foreground mb-1.5"
+        >
+          Mô tả
+        </label>
+        <RichTextEditor
+          value={description}
+          onChange={setDescription}
           placeholder="Nhập mô tả truyện..."
-          rows={5}
+        />
+        {/* Hidden input for form submission */}
+        <input
+          type="hidden"
+          name="description"
+          value={cleanHtml(description)}
         />
         {errors?.description && (
-          <p className="text-sm text-destructive">{errors.description}</p>
+          <p className="text-destructive text-xs mt-1">{errors.description}</p>
         )}
       </div>
 
-      {/* Author & Translator */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="author_name">Tác giả</Label>
-          <Input
-            id="author_name"
-            name="author_name"
-            defaultValue={getValue("author_name") as string}
-            placeholder="Tên tác giả"
-          />
+      {/* Grid: Author + Translator */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label
+            htmlFor="author_name"
+            className="block text-xs font-medium text-muted-foreground mb-1.5"
+          >
+            Tác giả
+          </label>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              id="author_name"
+              name="author_name"
+              type="text"
+              defaultValue={getValue("author_name")}
+              placeholder="Tên tác giả"
+              className="w-full pl-10 pr-3 py-2.5 bg-input border border-border/30 rounded-lg text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all"
+            />
+          </div>
           {errors?.author_name && (
-            <p className="text-sm text-destructive">{errors.author_name}</p>
+            <p className="text-destructive text-xs mt-1">
+              {errors.author_name}
+            </p>
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="translator">Dịch giả</Label>
-          <Input
-            id="translator"
-            name="translator"
-            defaultValue={getValue("translator") as string}
-            placeholder="Tên dịch giả"
-          />
+        <div>
+          <label
+            htmlFor="translator"
+            className="block text-xs font-medium text-muted-foreground mb-1.5"
+          >
+            Người dịch
+          </label>
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              id="translator"
+              name="translator"
+              type="text"
+              defaultValue={getValue("translator")}
+              placeholder="Tên người dịch"
+              className="w-full pl-10 pr-3 py-2.5 bg-input border border-border/30 rounded-lg text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all"
+            />
+          </div>
           {errors?.translator && (
-            <p className="text-sm text-destructive">{errors.translator}</p>
+            <p className="text-destructive text-xs mt-1">{errors.translator}</p>
           )}
         </div>
       </div>
 
       {/* Source URL */}
-      <div className="space-y-2">
-        <Label htmlFor="source_url">Link nguồn</Label>
-        <Input
-          id="source_url"
-          name="source_url"
-          type="url"
-          defaultValue={getValue("source_url") as string}
-          placeholder="https://example.com/manga"
-        />
+      <div>
+        <label
+          htmlFor="source_url"
+          className="block text-xs font-medium text-muted-foreground mb-1.5"
+        >
+          Link nguồn
+        </label>
+        <div className="relative">
+          <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            id="source_url"
+            name="source_url"
+            type="url"
+            defaultValue={getValue("source_url")}
+            placeholder="https://example.com"
+            className="w-full pl-10 pr-3 py-2.5 bg-input border border-border/30 rounded-lg text-foreground text-sm placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all"
+          />
+        </div>
         {errors?.source_url && (
-          <p className="text-sm text-destructive">{errors.source_url}</p>
+          <p className="text-destructive text-xs mt-1">{errors.source_url}</p>
         )}
       </div>
     </div>

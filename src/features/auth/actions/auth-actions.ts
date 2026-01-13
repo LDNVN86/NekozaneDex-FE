@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getAccessToken } from "@/shared/lib/server-auth";
-import { ok, err, type Result } from "@/response/response";
+import { ok, err, type Result } from "@/shared/lib/result";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:9091/api";

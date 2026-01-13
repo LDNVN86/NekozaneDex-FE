@@ -18,6 +18,7 @@ import {
   CollapsibleTrigger,
 } from "@/shared/ui/collapsible";
 import { cn } from "@/shared/lib/utils";
+import { HtmlContent } from "@/shared/components/html-content";
 import type { Story, Genre, Chapter } from "@/features/story";
 
 interface StoryHeaderProps {
@@ -127,9 +128,11 @@ export function StoryHeader({
             </Button>
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <p className="text-muted-foreground leading-relaxed">
-              {story.description || "Chưa có mô tả cho truyện này."}
-            </p>
+            <HtmlContent
+              html={story.description || ""}
+              fallback="Chưa có mô tả cho truyện này."
+              className="text-muted-foreground leading-relaxed"
+            />
           </CollapsibleContent>
         </Collapsible>
 
