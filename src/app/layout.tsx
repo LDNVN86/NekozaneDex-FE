@@ -52,7 +52,6 @@ export default async function RootLayout({
   const authResult = await getAuthFromCookie();
   const user = authResult.success ? authResult.data : null;
 
-  // Get current pathname to conditionally hide header for admin routes
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
   const isAdminRoute = pathname.startsWith("/server/admin");

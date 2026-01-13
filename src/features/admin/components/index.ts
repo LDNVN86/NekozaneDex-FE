@@ -4,8 +4,5 @@ export { StatsCards } from "./stats-cards";
 export { QuickActions } from "./quick-actions";
 export { StoriesTable } from "./stories-table";
 
-// Form components
 export * from "./forms";
-
-// Chapter components
 export * from "./chapters";

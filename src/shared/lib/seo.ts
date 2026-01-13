@@ -13,12 +13,9 @@ export interface SeoOptions {
   canonical?: string;
 }
 
-//Format page title with site name suffix
 export function formatTitle(title: string): string {
   return `${title} | ${SITE_NAME}`;
 }
-
-//Create basic metadata object
 export function createMetadata({
   title,
   description,
@@ -53,7 +50,6 @@ export function createMetadata({
   };
 }
 
-//Create metadata for story pages
 export function createStoryMetadata(
   storyTitle: string,
   options?: {
@@ -66,10 +62,8 @@ export function createStoryMetadata(
   const { description, coverImage, chapterTitle, chapterNumber } =
     options || {};
 
-  // Build title based on whether it's a chapter or story page
   const title = chapterTitle ? `${chapterTitle} - ${storyTitle}` : storyTitle;
 
-  // Build description
   const desc = chapterNumber
     ? `Đọc chương ${chapterNumber} của truyện ${storyTitle} tại ${SITE_NAME}`
     : description || `Đọc truyện ${storyTitle} tại ${SITE_NAME}`;
@@ -81,7 +75,6 @@ export function createStoryMetadata(
   });
 }
 
-//Create metadata for search pages
 export function createSearchMetadata(query?: string): Metadata {
   if (query) {
     return createMetadata({
@@ -97,7 +90,6 @@ export function createSearchMetadata(query?: string): Metadata {
   });
 }
 
-//Create 404/not found metadata
 export function createNotFoundMetadata(type: "story" | "chapter"): Metadata {
   const title =
     type === "story" ? "Truyện không tồn tại" : "Chapter không tồn tại";

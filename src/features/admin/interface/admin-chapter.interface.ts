@@ -1,6 +1,3 @@
-/**
- * Admin chapter entity - full chapter data for admin panel
- */
 export interface AdminChapter {
   id: string;
   story_id: string;

@@ -7,7 +7,7 @@ import {
   updateChapter as apiUpdateChapter,
   deleteChapter as apiDeleteChapter,
   publishChapter as apiPublishChapter,
-} from "../server/api";
+} from "../server";
 import type { ChapterFormState, ChapterFormData } from "../interface";
 
 function parseFormData(formData: FormData): ChapterFormData {
@@ -17,7 +17,6 @@ function parseFormData(formData: FormData): ChapterFormData {
   try {
     images = JSON.parse(imagesRaw || "[]");
   } catch {
-    // If not JSON, try splitting by newline
     images = imagesRaw
       ? imagesRaw
           .split("\n")
@@ -62,11 +61,9 @@ export async function createChapterAction(
 ): Promise<ChapterFormState> {
   const data = parseFormData(formData);
 
-  // Validate
   const validationError = validateFormData(data);
   if (validationError) return validationError;
 
-  // Call API
   const result = await apiCreateChapter(storyId, data);
 
   if (!result.success) {
@@ -77,7 +74,6 @@ export async function createChapterAction(
     };
   }
 
-  // Revalidate and redirect
   revalidatePath(`/server/admin/stories/${storyId}/chapters`);
   redirect(`/server/admin/stories/${storyId}/chapters`);
 }
@@ -90,11 +86,9 @@ export async function updateChapterAction(
 ): Promise<ChapterFormState> {
   const data = parseFormData(formData);
 
-  // Validate
   const validationError = validateFormData(data);
   if (validationError) return validationError;
 
-  // Call API
   const result = await apiUpdateChapter(chapterId, data);
 
   if (!result.success) {
@@ -105,7 +99,6 @@ export async function updateChapterAction(
     };
   }
 
-  // Revalidate
   revalidatePath(`/server/admin/stories/${storyId}/chapters`);
 
   return {
@@ -145,7 +138,7 @@ export async function scheduleChapterAction(
   storyId: string,
   scheduledAt: string
 ): Promise<void> {
-  const { scheduleChapter } = await import("../server/api");
+  const { scheduleChapter } = await import("../server");
   const result = await scheduleChapter(chapterId, scheduledAt);
 
   if (!result.success) {
@@ -159,7 +152,7 @@ export async function bulkImportChaptersAction(
   storyId: string,
   chapters: { title: string; images: string[] }[]
 ): Promise<void> {
-  const { bulkImportChapters } = await import("../server/api");
+  const { bulkImportChapters } = await import("../server");
   const result = await bulkImportChapters(storyId, chapters);
 
   if (!result.success) {

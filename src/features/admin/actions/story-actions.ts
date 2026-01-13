@@ -6,7 +6,7 @@ import {
   createStory as apiCreateStory,
   updateStory as apiUpdateStory,
   deleteStory as apiDeleteStory,
-} from "../server/api";
+} from "../server";
 import type { StoryFormState, StoryFormData, StoryStatus } from "../interface";
 
 function parseFormData(formData: FormData): StoryFormData {
@@ -66,11 +66,9 @@ export async function createStoryAction(
 ): Promise<StoryFormState> {
   const data = parseFormData(formData);
 
-  // Validate
   const validationError = validateFormData(data);
   if (validationError) return validationError;
 
-  // Call API
   const result = await apiCreateStory(data);
 
   if (!result.success) {
@@ -81,7 +79,6 @@ export async function createStoryAction(
     };
   }
 
-  // Revalidate and redirect
   revalidatePath("/server/admin/stories");
   redirect(`/server/admin/stories/${result.data.id}`);
 }
@@ -93,11 +90,9 @@ export async function updateStoryAction(
 ): Promise<StoryFormState> {
   const data = parseFormData(formData);
 
-  // Validate
   const validationError = validateFormData(data);
   if (validationError) return validationError;
 
-  // Call API
   const result = await apiUpdateStory(storyId, data);
 
   if (!result.success) {

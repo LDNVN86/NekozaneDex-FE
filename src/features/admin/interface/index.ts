@@ -1,4 +1,3 @@
-// ===== Story Types =====
 export type { AdminStory } from "./admin-story.interface";
 export type { StoryFormData } from "./story-form-data.interface";
 export type {
@@ -8,7 +7,6 @@ export type {
 export { STORY_STATUS_OPTIONS } from "./story-status.type";
 export type { StoryStatus } from "./story-status.type";
 
-// ===== Chapter Types =====
 export type { AdminChapter } from "./admin-chapter.interface";
 export type {
   ChapterFormData,
@@ -19,7 +17,6 @@ export type {
   ChapterFieldErrors,
 } from "./chapter-form-state.interface";
 
-// ===== Common Types =====
 export type { Genre } from "./genre.interface";
 export type {
   PaginatedResponse,

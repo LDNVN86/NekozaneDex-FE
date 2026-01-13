@@ -10,7 +10,6 @@ import type {
 interface StoryFormFieldsProps {
   story?: AdminStory;
   errors?: StoryFieldErrors;
-  /** Persisted values from previous failed submission */
   values?: StoryFormData;
 }
 
@@ -19,7 +18,6 @@ export function StoryFormFields({
   errors,
   values,
 }: StoryFormFieldsProps) {
-  // Use persisted values first, then fallback to story data
   const getValue = (key: keyof StoryFormData): string => {
     if (values?.[key] !== undefined) {
       const val = values[key];

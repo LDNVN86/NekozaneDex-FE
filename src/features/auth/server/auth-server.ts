@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { getAccessToken as getServerAccessToken } from "@/shared/lib/server-auth";
 import type { AuthUser } from "../types/auth";
 import { ok, err, type Result } from "@/response/response";
 
@@ -34,8 +35,7 @@ class AuthClient {
   }
 
   async getAccessToken(): Promise<string | null> {
-    const cookieStore = await cookies();
-    return cookieStore.get("access_token")?.value ?? null;
+    return getServerAccessToken();
   }
 
   async getRefreshToken(): Promise<string | null> {
@@ -48,14 +48,28 @@ class AuthClient {
     options?: RequestInit
   ): Promise<Result<T, string>> {
     try {
-      const cookieHeader = await this.getCookieHeader();
+      const cookieStore = await cookies();
       const normalizedEndpoint = endpoint.replace(/^\//, "");
+
+      // Check if we have a refreshed token from proxy
+      const accessToken = await this.getAccessToken();
+
+      // Build cookie header with refreshed token if available
+      const cookieHeader = cookieStore
+        .getAll()
+        .filter((c) => c.name !== "access_token") // Remove old access_token
+        .map((c) => `${c.name}=${c.value}`)
+        .join("; ");
+
+      const finalCookieHeader = accessToken
+        ? `access_token=${accessToken}; ${cookieHeader}`
+        : cookieHeader;
 
       const res = await fetch(`${API_BASE_URL}/${normalizedEndpoint}`, {
         ...options,
         headers: {
           "Content-Type": "application/json",
-          Cookie: cookieHeader,
+          Cookie: finalCookieHeader,
           ...options?.headers,
         },
         cache: "no-store",

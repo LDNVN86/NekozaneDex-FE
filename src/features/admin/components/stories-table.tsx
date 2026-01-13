@@ -16,7 +16,6 @@ import {
 } from "@/shared/ui/dropdown-menu";
 import { Badge } from "@/shared/ui/badge";
 
-// TODO: Replace with Admin API in Phase 4
 interface AdminStory {
   id: string;
   title: string;

@@ -1,9 +1,5 @@
 import "server-only";
 
-/**
- * Parse JWT token payload without verification
- * Only use this on server-side where token is already trusted
- */
 export function parseJwtPayload(token: string): Record<string, unknown> | null {
   try {
     const parts = token.split(".");
@@ -17,9 +13,6 @@ export function parseJwtPayload(token: string): Record<string, unknown> | null {
   }
 }
 
-/**
- * Get token expiry time in seconds since epoch
- */
 export function getTokenExpiry(token: string): number | null {
   const payload = parseJwtPayload(token);
   if (!payload || typeof payload.exp !== "number") return null;
@@ -40,9 +33,6 @@ export function isTokenValid(token: string, bufferSeconds = 60): boolean {
   return exp - bufferSeconds > nowSeconds;
 }
 
-/**
- * Get time remaining until token expires in seconds
- */
 export function getTokenTimeRemaining(token: string): number {
   const exp = getTokenExpiry(token);
   if (!exp) return 0;

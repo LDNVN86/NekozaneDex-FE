@@ -5,40 +5,16 @@
  * Handles 401 errors by refreshing token and retrying the request
  */
 
+import {
+  shouldRefreshToken,
+  isTokenExpired,
+} from "@/shared/lib/shared-token-utils";
+
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:9091/api";
 
 let isRefreshing = false;
 let refreshPromise: Promise<boolean> | null = null;
-
-/**
- * Parse JWT payload to check expiry (client-side safe)
- */
-function parseJwtExpiry(token: string): number | null {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return null;
-
-    const payload = parts[1];
-    // Use atob for client-side base64 decoding
-    const decoded = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
-    const data = JSON.parse(decoded);
-    return typeof data.exp === "number" ? data.exp : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Check if token needs refresh (expiring within bufferSeconds)
- */
-function tokenNeedsRefresh(token: string, bufferSeconds = 120): boolean {
-  const exp = parseJwtExpiry(token);
-  if (!exp) return true;
-
-  const nowSeconds = Math.floor(Date.now() / 1000);
-  return exp - bufferSeconds <= nowSeconds;
-}
 
 /**
  * Get access token from cookie
@@ -118,7 +94,7 @@ export async function clientFetch<T>(
 
   // Proactive refresh: check if token is expiring soon
   const token = getAccessTokenFromCookie();
-  if (token && tokenNeedsRefresh(token, 120)) {
+  if (token && shouldRefreshToken(token)) {
     console.log("[ClientFetch] Token expiring soon, proactively refreshing...");
     await refreshTokens();
   }
@@ -178,7 +154,7 @@ export function setupTokenRefreshInterval(
 
   const checkAndRefresh = async () => {
     const token = getAccessTokenFromCookie();
-    if (token && tokenNeedsRefresh(token, 180)) {
+    if (token && shouldRefreshToken(token)) {
       console.log("[TokenRefresh] Proactive refresh triggered by interval");
       await refreshTokens();
     }

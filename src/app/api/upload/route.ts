@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { headers } from "next/headers";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:9091/api";
 
+async function getToken(req: NextRequest): Promise<string | null> {
+  const headersList = await headers();
+  const refreshedToken = headersList.get("x-refreshed-access-token");
+  if (refreshedToken) return refreshedToken;
+
+  return req.cookies.get("access_token")?.value ?? null;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get("access_token")?.value;
+    const token = await getToken(req);
 
     if (!token) {
       return NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
@@ -15,7 +22,6 @@ export async function POST(req: NextRequest) {
 
     const formData = await req.formData();
 
-    // Forward to backend - processing done in Go
     const res = await fetch(`${API_BASE_URL}/users/upload-avatar`, {
       method: "POST",
       headers: {
@@ -24,7 +30,6 @@ export async function POST(req: NextRequest) {
       body: formData,
     });
 
-    // Handle non-JSON response
     const contentType = res.headers.get("content-type");
     if (!contentType?.includes("application/json")) {
       const text = await res.text();

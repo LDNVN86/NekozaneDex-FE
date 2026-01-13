@@ -1,8 +1,5 @@
 import type { StoryStatus } from "./story-status.type";
 
-/**
- * Form data structure for creating/updating a story
- */
 export interface StoryFormData {
   title: string;
   description?: string;

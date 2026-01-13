@@ -22,7 +22,7 @@ interface ScheduleChapterModalProps {
   chapterId: string;
   storyId: string;
   chapterTitle: string;
-  currentScheduledAt?: string; // ISO string of current scheduled time
+  currentScheduledAt?: string;
   onSuccess: () => void;
 }
 
@@ -40,15 +40,12 @@ export function ScheduleChapterModal({
   );
   const [isPending, setIsPending] = React.useState(false);
 
-  // Sync state with modal open/close
   React.useEffect(() => {
     if (open) {
-      // When opening: initialize with current scheduled time (or undefined if not scheduled)
       setScheduledAt(
         currentScheduledAt ? new Date(currentScheduledAt) : undefined
       );
     } else {
-      // When closing: reset state
       setScheduledAt(undefined);
     }
   }, [open, currentScheduledAt]);
@@ -85,7 +82,6 @@ export function ScheduleChapterModal({
     }
   };
 
-  // Get today's date as minimum selectable date
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 

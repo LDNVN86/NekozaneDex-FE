@@ -1,9 +1,6 @@
 import { Genre } from "@/features/story";
 import type { StoryStatus } from "./story-status.type";
 
-/**
- * Admin story entity - full story data for admin panel
- */
 export interface AdminStory {
   id: string;
   title: string;

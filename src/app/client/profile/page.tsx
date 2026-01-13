@@ -21,7 +21,9 @@ export default async function ProfilePage() {
 
   // Fetch bookmarks
   const bookmarksResult = await getMyBookmarks(1, 50);
-  const bookmarks = bookmarksResult.success ? bookmarksResult.data.data : [];
+  const bookmarks = bookmarksResult.success
+    ? bookmarksResult.data.data ?? bookmarksResult.data ?? []
+    : [];
 
   return (
     <ProfileContent

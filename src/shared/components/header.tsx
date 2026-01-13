@@ -68,7 +68,6 @@ export function Header({ user }: HeaderProps) {
     try {
       await logoutAction();
     } catch (error) {
-      // logoutAction redirects, so this will only run if there's an error
       console.error("Logout error:", error);
       setIsLoggingOut(false);
       router.refresh();

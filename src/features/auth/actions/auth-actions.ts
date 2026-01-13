@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getAccessToken } from "@/shared/lib/server-auth";
 import { ok, err, type Result } from "@/response/response";
 
 const API_BASE_URL =
@@ -211,8 +212,8 @@ export async function registerAction(
 
 export async function logoutAction(): Promise<void> {
   const cookieStore = await cookies();
+  const token = await getAccessToken();
 
-  const token = cookieStore.get("access_token")?.value;
   if (token) {
     try {
       await fetch(`${API_BASE_URL}/auth/logout`, {

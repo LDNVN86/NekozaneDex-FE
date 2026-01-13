@@ -131,9 +131,6 @@ export function ImageCropModal({
   );
 }
 
-/**
- * Create cropped image from canvas
- */
 async function getCroppedImg(
   imageSrc: string,
   pixelCrop: Area,
@@ -149,26 +146,21 @@ async function getCroppedImg(
 
   const rotRad = getRadianAngle(rotation);
 
-  // Calculate bounding box of the rotated image
   const { width: bBoxWidth, height: bBoxHeight } = rotateSize(
     image.width,
     image.height,
     rotation
   );
 
-  // Set canvas size to match the bounding box
   canvas.width = bBoxWidth;
   canvas.height = bBoxHeight;
 
-  // Translate canvas context to center
   ctx.translate(bBoxWidth / 2, bBoxHeight / 2);
   ctx.rotate(rotRad);
   ctx.translate(-image.width / 2, -image.height / 2);
 
-  // Draw rotated image
   ctx.drawImage(image, 0, 0);
 
-  // Get cropped data
   const data = ctx.getImageData(
     pixelCrop.x,
     pixelCrop.y,
@@ -176,14 +168,11 @@ async function getCroppedImg(
     pixelCrop.height
   );
 
-  // Set canvas to cropped size
   canvas.width = pixelCrop.width;
   canvas.height = pixelCrop.height;
 
-  // Put cropped image data
   ctx.putImageData(data, 0, 0);
 
-  // Return as blob
   return new Promise((resolve, reject) => {
     canvas.toBlob(
       (blob) => {

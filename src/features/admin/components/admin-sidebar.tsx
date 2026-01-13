@@ -44,7 +44,6 @@ import {
   useSidebar,
 } from "@/shared/ui/sidebar";
 
-// Admin navigation data
 const navMain = [
   {
     title: "Dashboard",

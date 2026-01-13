@@ -21,12 +21,6 @@ const AVATAR_OPTIONS: ImageProcessingOptions = {
   format: "webp",
 };
 
-/**
- * Process image buffer with Sharp
- * - Resize to max dimensions
- * - Convert to WebP
- * - Optimize quality
- */
 export async function processImage(
   buffer: Buffer,
   options: ImageProcessingOptions = DEFAULT_OPTIONS
@@ -36,9 +30,8 @@ export async function processImage(
     ...options,
   };
 
-  let pipeline = sharp(buffer).rotate(); // Auto-rotate based on EXIF
+  let pipeline = sharp(buffer).rotate();
 
-  // Resize if needed (maintaining aspect ratio)
   if (maxWidth || maxHeight) {
     pipeline = pipeline.resize(maxWidth, maxHeight, {
       fit: "inside",
@@ -46,7 +39,6 @@ export async function processImage(
     });
   }
 
-  // Convert to target format
   switch (format) {
     case "webp":
       pipeline = pipeline.webp({ quality });
@@ -63,24 +55,12 @@ export async function processImage(
 
   return { buffer: data, info };
 }
-
-/**
- * Process avatar image with optimized settings
- * - 200x200 max
- * - WebP format
- * - Higher quality for small images
- */
 export async function processAvatar(
   buffer: Buffer
 ): Promise<{ buffer: Buffer; info: sharp.OutputInfo }> {
   return processImage(buffer, AVATAR_OPTIONS);
 }
 
-/**
- * Process chapter image with standard settings
- * - 1200px max width
- * - WebP format
- */
 export async function processChapterImage(
   buffer: Buffer
 ): Promise<{ buffer: Buffer; info: sharp.OutputInfo }> {
@@ -92,9 +72,6 @@ export async function processChapterImage(
   });
 }
 
-/**
- * Get new filename with correct extension
- */
 export function getProcessedFilename(
   originalFilename: string,
   format: "webp" | "jpeg" | "png" = "webp"

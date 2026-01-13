@@ -22,11 +22,13 @@ Nekozanedex là một nền tảng đọc truyện web novel hiệu suất cao, 
 ### 🔐 Hệ thống Xác thực Nâng cao
 
 - **SSR-First Auth**: Quản lý phiên đăng nhập an toàn sử dụng Server Components và Server Actions.
-- **Tự động làm mới Token (Proxy-based)**: Cơ chế gia hạn `access_token` thông minh qua lớp Proxy trung gian.
+- **Utility Xác thực Tập trung**: `src/shared/lib/server-auth.ts` cung cấp giao diện thống nhất để quản lý token và gọi API xác thực (`authFetch`).
+- **Proxy Thích ứng**: Middleware thông minh tự động làm mới token cho cả route bảo mật và công khai (public), đảm bảo trạng thái UI luôn chính xác.
 - **Phát hiện tái sử dụng JWT**: Bảo mật cấp độ doanh nghiệp chống đánh cắp token và truy cập trái phép.
 
 ### 🛠️ Quản trị (Admin Dashboard)
 
+- **Modular Admin API**: Logic server được tách thành các module chuyên biệt (`stories.ts`, `chapters.ts`,...) giúp dễ bảo trì và mở rộng.
 - **Quản lý Truyện toàn diện**: CRUD cho truyện, thể loại và chương truyện.
 - **Import hàng loạt**: Hỗ trợ đăng nhiều chương cùng lúc một cách nhanh chóng.
 - **Quản lý Hình ảnh**: Tích hợp Cloudinary để quản lý ảnh bìa truyện.
@@ -100,9 +102,11 @@ src/
 │   ├── [feature]/
 │   │   ├── actions/      # Server Actions
 │   │   ├── components/   # UI Components
-│   │   ├── server/       # Logic Server-only (API calls)
+│   │   ├── server/       # Modularized API logic
 │   │   └── types/        # TypeScript Definitions
 ├── shared/               # Components, hooks và libs dùng chung
+│   ├── lib/
+│   │   └── server-auth.ts # Logic Xác thực Server-Side cốt lõi
 ├── response/             # Xử lý theo Result Pattern
 └── proxy.ts              # Proxy thông minh cho Auth & Routing
 ```
