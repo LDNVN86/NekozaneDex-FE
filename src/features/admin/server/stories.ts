@@ -10,12 +10,14 @@ import type {
 
 export async function getAdminStories(
   page = 1,
-  limit = 20
+  limit = 20,
+  search = ""
 ): Promise<Result<PaginatedResponse<AdminStory>>> {
+  const searchParam = search ? `&search=${encodeURIComponent(search)}` : "";
   return withAuthFetch(
     (headers) =>
       serverFetch<PaginatedResponse<AdminStory>>(
-        `/admin/stories?page=${page}&limit=${limit}`,
+        `/admin/stories?page=${page}&limit=${limit}${searchParam}`,
         { headers }
       ),
     "Không thể lấy danh sách truyện"

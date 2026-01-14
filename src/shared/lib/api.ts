@@ -24,15 +24,15 @@ export async function serverFetch<T>(
   });
 
   if (!res.ok) {
+    let message = `Lỗi ${res.status}`;
     try {
       const errorBody = await res.json();
-      const message =
-        errorBody.message || errorBody.error || `API Error: ${res.status}`;
-      console.error(`[serverFetch] ${res.status} - ${message} - ${url}`);
-      throw new Error(message);
+      message = errorBody.error || errorBody.message || message;
     } catch {
-      throw new Error(`API Error: ${res.status}`);
+      // JSON parse failed, use default message
     }
+    console.error(`[serverFetch] ${res.status} - ${message} - ${url}`);
+    throw new Error(message);
   }
 
   return res.json();

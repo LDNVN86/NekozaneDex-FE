@@ -30,26 +30,26 @@ export function SearchContent({
   );
   const [isSearching, setIsSearching] = React.useState(false);
 
+  // Debounced search - compare URLs to prevent infinite loop
   React.useEffect(() => {
     const timer = setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams();
 
       if (query) {
         params.set("q", query);
-      } else {
-        params.delete("q");
       }
 
       if (selectedGenres.length > 0) {
         params.set("genres", selectedGenres.join(","));
-      } else {
-        params.delete("genres");
       }
 
-      params.delete("page");
-
       const newUrl = `/client/search?${params.toString()}`;
-      router.push(newUrl);
+      const currentUrl = `/client/search?${searchParams.toString()}`;
+
+      // Only push if URL actually changed
+      if (newUrl !== currentUrl) {
+        router.push(newUrl);
+      }
     }, 500);
 
     return () => clearTimeout(timer);

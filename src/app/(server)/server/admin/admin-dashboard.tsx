@@ -4,7 +4,11 @@ import * as React from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { Button } from "@/shared/ui/button";
-import { StatsCards, QuickActions, StoriesTable } from "@/features/admin";
+import {
+  StatsCards,
+  QuickActions,
+  DashboardStoriesPreview,
+} from "@/features/admin";
 import { BarChart } from "@/shared/components/charts";
 
 const TRAFFIC_DATA = [65, 45, 78, 90, 55, 88, 72];
@@ -50,7 +54,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
         />
       </div>
 
-      <StoriesTable />
+      <DashboardStoriesPreview />
     </>
   );
 }

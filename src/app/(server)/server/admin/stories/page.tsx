@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 interface StoriesPageProps {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
 
 export default async function StoriesPage({ searchParams }: StoriesPageProps) {
@@ -20,13 +20,14 @@ export default async function StoriesPage({ searchParams }: StoriesPageProps) {
     redirect("/auth/login");
   }
 
-  // Get page from searchParams
+  // Get params from searchParams
   const params = await searchParams;
   const page = parseInt(params.page || "1", 10);
+  const search = params.search || "";
 
-  // Fetch data
+  // Fetch data with search
   const [storiesResult, genresResult] = await Promise.all([
-    getAdminStories(page, 20),
+    getAdminStories(page, 20, search),
     getAllGenres(),
   ]);
 
@@ -45,6 +46,7 @@ export default async function StoriesPage({ searchParams }: StoriesPageProps) {
         totalPages: stories.total_pages,
         total: stories.total,
       }}
+      initialSearch={search}
     />
   );
 }

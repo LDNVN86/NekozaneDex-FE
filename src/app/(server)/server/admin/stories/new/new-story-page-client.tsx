@@ -15,17 +15,14 @@ interface NewStoryPageClientProps {
 export function NewStoryPageClient({ genres }: NewStoryPageClientProps) {
   return (
     <>
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
+      {/* Back Button */}
+      <div className="mb-4">
         <Link href="/server/admin/stories">
-          <Button variant="ghost" size="icon">
+          <Button variant="ghost" size="sm" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
+            Quay lại
           </Button>
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold">Thêm truyện mới</h1>
-          <p className="text-muted-foreground">Tạo truyện mới cho hệ thống</p>
-        </div>
       </div>
 
       {/* Form */}

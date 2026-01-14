@@ -34,6 +34,7 @@ import {
   SheetTitle,
 } from "@/shared/ui/sheet";
 import { cn } from "@/shared/lib/utils";
+import { SearchSuggestions } from "@/shared/components/search-suggestions";
 import { logoutAction } from "@/features/auth/actions/auth-actions";
 import type { AuthUser } from "@/features/auth/types/auth";
 
@@ -108,14 +109,10 @@ export function Header({ user }: HeaderProps) {
 
           {/* Search Bar - Desktop */}
           <div className="hidden lg:flex flex-1 max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Tìm kiếm truyện..."
-                className="pl-10 bg-secondary/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
-              />
-            </div>
+            <SearchSuggestions
+              className="w-full"
+              inputClassName="bg-secondary/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
+            />
           </div>
 
           {/* Right Actions */}
@@ -247,14 +244,7 @@ export function Header({ user }: HeaderProps) {
                 <SheetTitle className="sr-only">Menu điều hướng</SheetTitle>
                 <div className="flex flex-col gap-6 mt-6">
                   {/* Mobile Search */}
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="search"
-                      placeholder="Tìm kiếm truyện..."
-                      className="pl-10"
-                    />
-                  </div>
+                  <SearchSuggestions className="w-full" />
 
                   {/* Mobile Navigation */}
                   <nav className="flex flex-col gap-1">
