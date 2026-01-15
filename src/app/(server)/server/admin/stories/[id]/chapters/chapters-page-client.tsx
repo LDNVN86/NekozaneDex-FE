@@ -189,7 +189,13 @@ export function ChaptersPageClient({
                       Số
                     </th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
+                      Label
+                    </th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">
                       Tiêu đề
+                    </th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">
+                      Loại
                     </th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">
                       Số trang
@@ -214,8 +220,21 @@ export function ChaptersPageClient({
                       <td className="py-3 px-4 font-medium">
                         {chapter.chapter_number}
                       </td>
+                      <td className="py-3 px-4 text-sm text-muted-foreground">
+                        {chapter.chapter_label || "-"}
+                      </td>
                       <td className="py-3 px-4">
                         <span className="line-clamp-1">{chapter.title}</span>
+                      </td>
+                      <td className="py-3 px-4 hidden sm:table-cell">
+                        {chapter.chapter_type &&
+                        chapter.chapter_type !== "regular" ? (
+                          <Badge variant="secondary" className="capitalize">
+                            {chapter.chapter_type}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </td>
                       <td className="py-3 px-4 hidden sm:table-cell text-muted-foreground">
                         {chapter.page_count}

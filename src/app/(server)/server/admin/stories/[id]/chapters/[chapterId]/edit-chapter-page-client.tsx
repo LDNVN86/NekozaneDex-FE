@@ -37,9 +37,7 @@ export function EditChapterPageClient({
       </div>
 
       {/* Chapter Form */}
-      <div className="max-w-2xl">
-        <ChapterForm chapter={chapter} action={boundAction} />
-      </div>
+      <ChapterForm chapter={chapter} action={boundAction} />
     </>
   );
 }

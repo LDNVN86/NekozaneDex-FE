@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getAuthFromCookie } from "@/features/auth/server";
 import { getMyBookmarks } from "@/features/profile/server";
+import { getReadingHistory } from "@/features/reading-history/server";
 import { ProfileContent } from "@/features/profile/components/profile-content";
 import { createMetadata } from "@/shared/lib/seo";
 
@@ -19,11 +20,17 @@ export default async function ProfilePage() {
 
   const user = authResult.data;
 
-  // Fetch bookmarks
-  const bookmarksResult = await getMyBookmarks(1, 50);
+  // Fetch bookmarks and history in parallel
+  const [bookmarksResult, historyResult] = await Promise.all([
+    getMyBookmarks(1, 50),
+    getReadingHistory(1, 50),
+  ]);
+
   const bookmarks = bookmarksResult.success
     ? bookmarksResult.data.data ?? bookmarksResult.data ?? []
     : [];
+
+  const history = historyResult.success ? historyResult.data.data ?? [] : [];
 
   return (
     <ProfileContent
@@ -35,7 +42,7 @@ export default async function ProfilePage() {
         joinedAt: user.created_at ?? new Date().toISOString(),
       }}
       bookmarks={bookmarks}
-      history={[]} // TODO: Add history API when available
+      history={history}
     />
   );
 }

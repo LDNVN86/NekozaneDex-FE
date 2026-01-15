@@ -17,14 +17,34 @@ import {
 } from "@/shared/lib/validation";
 
 function parseFormData(formData: FormData): StoryFormData {
+  // Parse alt_titles from comma-separated string
+  const altTitlesStr = formData.get("alt_titles") as string;
+  const altTitles = altTitlesStr
+    ? altTitlesStr
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean)
+    : undefined;
+
+  // Parse numeric fields
+  const releaseYearStr = formData.get("release_year") as string;
+  const endYearStr = formData.get("end_year") as string;
+
   return {
     title: formData.get("title") as string,
+    original_title: (formData.get("original_title") as string) || undefined,
+    alt_titles: altTitles,
     description: (formData.get("description") as string) || undefined,
     cover_image_url:
       (formData.get("cover_image_url_url") as string) || undefined,
     author_name: (formData.get("author_name") as string) || undefined,
+    artist_name: (formData.get("artist_name") as string) || undefined,
     translator: (formData.get("translator") as string) || undefined,
     source_url: (formData.get("source_url") as string) || undefined,
+    source_name: (formData.get("source_name") as string) || undefined,
+    country: (formData.get("country") as string) || undefined,
+    release_year: releaseYearStr ? parseInt(releaseYearStr, 10) : undefined,
+    end_year: endYearStr ? parseInt(endYearStr, 10) : undefined,
     status: (formData.get("status") as StoryStatus) || "ongoing",
     is_published: formData.get("is_published") === "true",
     genre_ids: formData.getAll("genre_ids") as string[],

@@ -47,7 +47,8 @@ export function HistoryTab({ history }: HistoryTabProps) {
                     {item.story.title}
                   </Link>
                   <p className="text-sm text-muted-foreground">
-                    Đọc đến: Chương {item.chapter_number}
+                    Đọc đến: Chương {item.chapter.chapter_number}
+                    {item.chapter.title && ` - ${item.chapter.title}`}
                   </p>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
                     <Clock className="h-3 w-3" />
@@ -57,7 +58,7 @@ export function HistoryTab({ history }: HistoryTabProps) {
                 <div className="flex items-center gap-2">
                   <Button size="sm" asChild>
                     <Link
-                      href={`/client/stories/${item.story.slug}/${item.chapter_number}`}
+                      href={`/client/stories/${item.story.slug}/${item.chapter.chapter_number}`}
                     >
                       Đọc tiếp
                     </Link>

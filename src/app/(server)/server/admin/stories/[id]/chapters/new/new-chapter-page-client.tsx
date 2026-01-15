@@ -37,9 +37,7 @@ export function NewChapterPageClient({ story }: NewChapterPageClientProps) {
       </div>
 
       {/* Form */}
-      <div className="max-w-2xl">
-        <ChapterForm action={boundAction} />
-      </div>
+      <ChapterForm action={boundAction} />
     </>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Heart, History, Settings, BookOpen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { ProfileHeader, BookmarksTab, HistoryTab, SettingsTab } from "./ui";
@@ -18,10 +18,19 @@ export function ProfileContent({
   bookmarks,
   history,
 }: ProfileContentProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const defaultTab = tabParam || "bookmarks";
   const [activeTab, setActiveTab] = React.useState(defaultTab);
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    // Update URL without full page reload
+    const url =
+      tab === "bookmarks" ? "/client/profile" : `/client/profile?tab=${tab}`;
+    router.replace(url, { scroll: false });
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -33,7 +42,7 @@ export function ProfileContent({
 
       <Tabs
         value={activeTab}
-        onValueChange={setActiveTab}
+        onValueChange={handleTabChange}
         className="space-y-6"
       >
         <TabsList className="grid w-full grid-cols-3 max-w-md">

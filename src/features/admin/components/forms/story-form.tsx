@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useActionState } from "react";
+import { useActionState, startTransition } from "react";
 import { Loader2, BookOpen, Save } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/shared/ui/button";
@@ -73,8 +73,10 @@ export function StoryForm({ story, genres, action }: StoryFormProps) {
       }
     }
 
-    // Now submit the form with all data
-    formAction(formData);
+    // Now submit the form with all data - wrapped in startTransition for useActionState
+    startTransition(() => {
+      formAction(formData);
+    });
   };
 
   const isProcessing = isPending || isUploading;

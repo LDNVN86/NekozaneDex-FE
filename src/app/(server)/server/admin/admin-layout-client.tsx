@@ -38,6 +38,7 @@ export function AdminLayoutClient({ children, user }: AdminLayoutClientProps) {
       genres: "Thể loại",
       users: "Người dùng",
       settings: "Cài đặt",
+      "comment-reports": "Quản lý báo cáo",
     };
 
     return segments.map((s) => labels[s] || s).join(" / ");

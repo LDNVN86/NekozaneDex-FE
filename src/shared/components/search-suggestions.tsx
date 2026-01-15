@@ -90,7 +90,7 @@ export function SearchSuggestions({
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            type="search"
+            type="text"
             placeholder={placeholder}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -111,7 +111,6 @@ export function SearchSuggestions({
           )}
         </div>
       </form>
-
       {/* Suggestions dropdown */}
       {isOpen && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-lg shadow-lg overflow-hidden z-50">

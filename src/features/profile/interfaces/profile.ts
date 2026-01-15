@@ -16,10 +16,22 @@ export interface BookmarkItem {
   story: Story;
 }
 
+// Matches API response from GET /reading-history
 export interface HistoryItem {
   id: string;
   story_id: string;
-  chapter_number: number;
+  chapter_id: string;
   last_read_at: string;
-  story: Story;
+  scroll_position: number;
+  story: {
+    id: string;
+    title: string;
+    slug: string;
+    cover_image_url: string | null;
+  };
+  chapter: {
+    id: string;
+    title: string;
+    chapter_number: number;
+  };
 }

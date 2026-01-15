@@ -4,6 +4,8 @@ import {
   getChapterByNumber,
   getChaptersByStory,
 } from "@/features/story";
+import { getAuthFromCookie } from "@/features/auth/server";
+import { getStoryProgress } from "@/features/reading-history/server";
 import { ChapterReaderClient } from "@/features/chapter/client/chapter-reader-client";
 import { createStoryMetadata, createNotFoundMetadata } from "@/shared/lib/seo";
 
@@ -42,6 +44,11 @@ export default async function ChapterPage({ params }: Props) {
     notFound();
   }
 
+  // Check auth for reading progress
+  const authResult = await getAuthFromCookie();
+  const isLoggedIn = authResult.success;
+
+  // First batch: fetch story, chapter, and chapters list
   const [storyResult, chapterResult, chaptersResult] = await Promise.all([
     getStoryBySlug(slug),
     getChapterByNumber(slug, chapterNum),
@@ -56,11 +63,28 @@ export default async function ChapterPage({ params }: Props) {
   const currentChapter = chapterResult.data;
   const chapters = chaptersResult.success ? chaptersResult.data : [];
 
+  // Second: fetch progress using actual story ID (not slug)
+  let savedScrollPos: number | undefined;
+  if (isLoggedIn) {
+    try {
+      const progressResult = await getStoryProgress(story.id);
+      if (progressResult.success && progressResult.data) {
+        // Only restore if same chapter
+        if (progressResult.data.chapter_id === currentChapter.id) {
+          savedScrollPos = progressResult.data.scroll_position;
+        }
+      }
+    } catch {
+      // Ignore errors - progress is optional
+    }
+  }
+
   return (
     <ChapterReaderClient
       story={story}
       chapter={currentChapter}
       chapters={chapters}
+      savedScrollPosition={savedScrollPos}
     />
   );
 }

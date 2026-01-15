@@ -12,6 +12,7 @@ import {
   ChevronRight,
   LogOut,
   FileText,
+  Flag,
 } from "lucide-react";
 
 import { cn } from "@/shared/lib/utils";
@@ -75,6 +76,11 @@ const navMain = [
     title: "Cài đặt",
     url: "/server/admin/settings",
     icon: Settings,
+  },
+  {
+    title: "Báo cáo",
+    url: "/server/admin/comment-reports",
+    icon: Flag,
   },
 ];
 

@@ -1,21 +1,31 @@
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, List } from "lucide-react";
 import { Button } from "@/shared/ui/button";
+import { cn } from "@/shared/lib/utils";
 import type { Chapter } from "@/features/story";
 
 interface ReaderFooterProps {
   storySlug: string;
   prevChapter: Chapter | null;
   nextChapter: Chapter | null;
+  /** Control visibility for auto-hide */
+  isVisible?: boolean;
 }
 
 export function ReaderFooter({
   storySlug,
   prevChapter,
   nextChapter,
+  isVisible = true,
 }: ReaderFooterProps) {
   return (
-    <footer className="sticky bottom-0 border-t py-4 bg-black/95 border-gray-800 backdrop-blur-sm">
+    <footer
+      className={cn(
+        "fixed bottom-0 left-0 right-0 border-t py-4 bg-black/95 border-gray-800 backdrop-blur-sm",
+        "transition-transform duration-300 ease-out",
+        isVisible ? "translate-y-0" : "translate-y-full"
+      )}
+    >
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between max-w-2xl mx-auto">
           {/* Previous Chapter */}

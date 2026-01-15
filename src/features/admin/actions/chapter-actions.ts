@@ -30,8 +30,15 @@ function parseFormData(formData: FormData): ChapterFormData {
       : [];
   }
 
+  // Parse ordering as number if provided
+  const orderingStr = formData.get("ordering") as string;
+  const ordering = orderingStr ? parseFloat(orderingStr) : undefined;
+
   return {
     title: formData.get("title") as string,
+    chapter_label: (formData.get("chapter_label") as string) || undefined,
+    chapter_type: (formData.get("chapter_type") as string) || "regular",
+    ordering,
     images,
   };
 }
