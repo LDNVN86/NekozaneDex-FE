@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { MessageCircle, ChevronDown, ChevronUp } from "lucide-react";
 import type { Comment } from "../../server";

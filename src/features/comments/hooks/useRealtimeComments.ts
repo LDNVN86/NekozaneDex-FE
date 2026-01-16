@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react";
 import { useCentrifugo } from "@/features/realtime";
 import type { Comment } from "../server";
