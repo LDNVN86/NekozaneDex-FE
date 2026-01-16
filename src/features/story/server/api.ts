@@ -9,52 +9,52 @@ import type {
 
 export async function getStories(
   page = 1,
-  limit = 20
+  limit = 20,
 ): Promise<Result<PaginatedResponse<Story>, string>> {
   try {
     const data = await serverFetch<PaginatedResponse<Story>>(
-      `/stories?page=${page}&limit=${limit}`
+      `/stories?page=${page}&limit=${limit}`,
     );
     return ok(data);
   } catch (error) {
     return err(
-      error instanceof Error ? error.message : "Failed to fetch stories"
+      error instanceof Error ? error.message : "Failed to fetch stories",
     );
   }
 }
 
 export async function getLatestStories(
-  limit = 10
+  limit = 10,
 ): Promise<Result<Story[], string>> {
   try {
     const data = await serverFetch<SingleResponse<Story[]>>(
-      `/stories/latest?limit=${limit}`
+      `/stories/latest?limit=${limit}`,
     );
     return ok(data.data);
   } catch (error) {
     return err(
-      error instanceof Error ? error.message : "Failed to fetch latest stories"
+      error instanceof Error ? error.message : "Failed to fetch latest stories",
     );
   }
 }
 
 export async function getHotStories(
-  limit = 10
+  limit = 10,
 ): Promise<Result<Story[], string>> {
   try {
     const data = await serverFetch<SingleResponse<Story[]>>(
-      `/stories/hot?limit=${limit}`
+      `/stories/hot?limit=${limit}`,
     );
     return ok(data.data);
   } catch (error) {
     return err(
-      error instanceof Error ? error.message : "Failed to fetch hot stories"
+      error instanceof Error ? error.message : "Failed to fetch hot stories",
     );
   }
 }
 
 export async function getStoryBySlug(
-  slug: string
+  slug: string,
 ): Promise<Result<Story, string>> {
   try {
     const data = await serverFetch<SingleResponse<Story>>(`/stories/${slug}`);
@@ -67,13 +67,13 @@ export async function getStoryBySlug(
 export async function searchStories(
   query: string,
   page = 1,
-  limit = 20
+  limit = 20,
 ): Promise<Result<PaginatedResponse<Story>, string>> {
   try {
     const data = await serverFetch<PaginatedResponse<Story>>(
       `/stories/search?q=${encodeURIComponent(
-        query
-      )}&page=${page}&limit=${limit}`
+        query,
+      )}&page=${page}&limit=${limit}`,
     );
     return ok(data);
   } catch (error) {
@@ -84,18 +84,18 @@ export async function searchStories(
 export async function getStoriesByGenre(
   genreSlug: string,
   page = 1,
-  limit = 20
+  limit = 20,
 ): Promise<Result<PaginatedResponse<Story>, string>> {
   try {
     const data = await serverFetch<PaginatedResponse<Story>>(
-      `/genres/${genreSlug}/stories?page=${page}&limit=${limit}`
+      `/genres/${genreSlug}/stories?page=${page}&limit=${limit}`,
     );
     return ok(data);
   } catch (error) {
     return err(
       error instanceof Error
         ? error.message
-        : "Failed to fetch stories by genre"
+        : "Failed to fetch stories by genre",
     );
   }
 }
@@ -106,33 +106,50 @@ export async function getRandomStory(): Promise<Result<Story, string>> {
     return ok(data.data);
   } catch (error) {
     return err(
-      error instanceof Error ? error.message : "Failed to get random story"
+      error instanceof Error ? error.message : "Failed to get random story",
     );
   }
 }
 
+export interface ChaptersResponse {
+  chapters: Chapter[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export async function getChaptersByStory(
-  storySlug: string
-): Promise<Result<Chapter[], string>> {
+  storySlug: string,
+  page = 1,
+  limit = 100,
+): Promise<Result<ChaptersResponse, string>> {
   try {
-    const data = await serverFetch<SingleResponse<Chapter[]>>(
-      `/stories/${storySlug}/chapters`
+    // Backend returns: { success: true, data: { chapters, total, page, limit } }
+    const response = await serverFetch<{ data: ChaptersResponse }>(
+      `/stories/${storySlug}/chapters?page=${page}&limit=${limit}`,
     );
-    return ok(data.data);
+    // Handle both response formats
+    const result = response.data || (response as unknown as ChaptersResponse);
+    return ok({
+      chapters: result.chapters || [],
+      total: result.total || 0,
+      page: result.page || page,
+      limit: result.limit || limit,
+    });
   } catch (error) {
     return err(
-      error instanceof Error ? error.message : "Failed to fetch chapters"
+      error instanceof Error ? error.message : "Failed to fetch chapters",
     );
   }
 }
 
 export async function getChapterByNumber(
   storySlug: string,
-  chapterNumber: number
+  chapterNumber: number,
 ): Promise<Result<Chapter, string>> {
   try {
     const data = await serverFetch<SingleResponse<Chapter>>(
-      `/stories/${storySlug}/chapters/${chapterNumber}`
+      `/stories/${storySlug}/chapters/${chapterNumber}`,
     );
     return ok(data.data);
   } catch (error) {

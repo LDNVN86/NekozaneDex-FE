@@ -2,7 +2,15 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowUpDown, Clock, BookOpen, Sparkles } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  BookOpen,
+  Sparkles,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
 import { cn } from "@/shared/lib/utils";
@@ -11,7 +19,10 @@ import type { Chapter } from "@/features/story";
 interface ChapterListProps {
   storySlug: string;
   chapters: Chapter[];
+  totalChapters?: number;
 }
+
+const CHAPTERS_PER_PAGE = 10;
 
 const CHAPTER_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   extra: {
@@ -28,28 +39,75 @@ const CHAPTER_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   },
 };
 
-export function ChapterList({ storySlug, chapters }: ChapterListProps) {
-  const [sortOrder, setSortOrder] = React.useState<"asc" | "desc">("desc");
+export function ChapterList({
+  storySlug,
+  chapters: initialChapters = [],
+  totalChapters = 0,
+}: ChapterListProps) {
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [chapters, setChapters] = React.useState<Chapter[]>(initialChapters);
+  const [isLoading, setIsLoading] = React.useState(false);
 
-  const sortedChapters = React.useMemo(() => {
-    return [...chapters].sort((a, b) => {
-      // Use ordering if available, otherwise chapter_number
-      const orderA = a.ordering ?? a.chapter_number;
-      const orderB = b.ordering ?? b.chapter_number;
-      return sortOrder === "desc" ? orderB - orderA : orderA - orderB;
-    });
-  }, [chapters, sortOrder]);
+  // Calculate total pages
+  const chapterCount = totalChapters || initialChapters.length;
+  const totalPages = Math.ceil(chapterCount / CHAPTERS_PER_PAGE);
+
+  // Fetch chapters when page changes
+  const fetchChapters = React.useCallback(
+    async (page: number) => {
+      setIsLoading(true);
+      try {
+        const res = await fetch(
+          `/api/stories/${storySlug}/chapters?page=${page}&limit=${CHAPTERS_PER_PAGE}`,
+        );
+        const data = await res.json();
+        if (data.success && data.data?.chapters) {
+          setChapters(data.data.chapters);
+        }
+      } catch (error) {
+        console.error("Failed to fetch chapters:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [storySlug],
+  );
+
+  // Handle page change
+  const goToPage = (page: number) => {
+    if (page < 1 || page > totalPages || page === currentPage) return;
+    setCurrentPage(page);
+    fetchChapters(page);
+  };
+
+  // Generate visible page numbers (show 5 pages centered on current)
+  const getVisiblePages = () => {
+    const pages: number[] = [];
+    const maxVisible = 5;
+
+    let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+    let end = Math.min(totalPages, start + maxVisible - 1);
+
+    // Adjust if we're near the end
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    return pages;
+  };
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return "";
     return new Date(dateString).toLocaleDateString("vi-VN", {
       day: "2-digit",
       month: "2-digit",
-      year: "numeric",
     });
   };
 
-  // Check if chapter is new (within 7 days)
   const isNewChapter = (dateString?: string) => {
     if (!dateString) return false;
     const publishDate = new Date(dateString);
@@ -59,94 +117,180 @@ export function ChapterList({ storySlug, chapters }: ChapterListProps) {
     return diffDays <= 7;
   };
 
-  // Get chapter display label
   const getChapterLabel = (chapter: Chapter) => {
     if (chapter.chapter_label) return chapter.chapter_label;
-    return `Chương ${chapter.chapter_number}`;
+    return `Ch.${chapter.chapter_number}`;
   };
 
+  const visiblePages = getVisiblePages();
+
+  // Skeleton component for loading
+  const ChapterSkeleton = () => (
+    <div className="divide-y divide-border/30">
+      {Array.from({ length: CHAPTERS_PER_PAGE }).map((_, i) => (
+        <div key={i} className="flex items-center justify-between px-3 h-10">
+          <div className="flex items-center gap-2">
+            <div className="h-4 w-12 bg-muted animate-pulse rounded" />
+            <div className="h-3 w-32 bg-muted/60 animate-pulse rounded hidden md:block" />
+          </div>
+          <div className="h-3 w-10 bg-muted/40 animate-pulse rounded" />
+        </div>
+      ))}
+    </div>
+  );
+
   return (
-    <section className="mb-10">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold flex items-center gap-2">
+    <section>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-lg font-bold flex items-center gap-2">
           <BookOpen className="h-5 w-5 text-primary" />
-          Danh sách chương
-          <span className="text-muted-foreground font-normal">
-            ({chapters.length})
+          Chương
+          <span className="text-muted-foreground font-normal text-sm">
+            ({chapterCount})
           </span>
         </h2>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setSortOrder((o) => (o === "desc" ? "asc" : "desc"))}
-          className="gap-2"
-        >
-          <ArrowUpDown className="h-4 w-4" />
-          {sortOrder === "desc" ? "Mới nhất" : "Cũ nhất"}
-        </Button>
       </div>
 
-      {chapters.length > 0 ? (
+      {/* Chapter List */}
+      {chapterCount > 0 ? (
         <div className="border rounded-xl overflow-hidden bg-card/30">
-          <div className="max-h-[600px] overflow-y-auto">
-            <div className="divide-y divide-border/50">
-              {sortedChapters.map((chapter) => {
-                const typeConfig = chapter.chapter_type
-                  ? CHAPTER_TYPE_CONFIG[chapter.chapter_type]
-                  : null;
-                const isNew = isNewChapter(chapter.published_at);
+          {/* Fixed height container = CHAPTERS_PER_PAGE * row height (40px) */}
+          <div className="h-[400px] overflow-hidden">
+            {isLoading ? (
+              <ChapterSkeleton />
+            ) : (
+              <div className="divide-y divide-border/30">
+                {chapters.map((chapter) => {
+                  const typeConfig = chapter.chapter_type
+                    ? CHAPTER_TYPE_CONFIG[chapter.chapter_type]
+                    : null;
+                  const isNew = isNewChapter(chapter.published_at);
 
-                return (
-                  <Link
-                    key={chapter.id}
-                    href={`/client/stories/${storySlug}/${chapter.chapter_number}`}
-                    className="flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors group"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      {/* Chapter number/label */}
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-primary group-hover:underline">
+                  return (
+                    <Link
+                      key={chapter.id}
+                      href={`/client/stories/${storySlug}/${chapter.chapter_number}`}
+                      className="flex items-center justify-between px-3 h-10 hover:bg-muted/40 transition-colors group"
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+                        <span className="font-medium text-sm text-primary group-hover:underline shrink-0">
                           {getChapterLabel(chapter)}
                         </span>
                         {typeConfig && (
                           <Badge
                             className={cn(
-                              "text-[10px] px-1.5 py-0 h-5 border",
-                              typeConfig.color
+                              "text-[9px] px-1 py-0 h-4 border shrink-0",
+                              typeConfig.color,
                             )}
                           >
                             {typeConfig.label}
                           </Badge>
                         )}
                         {isNew && (
-                          <Badge className="text-[10px] px-1.5 py-0 h-5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                            <Sparkles className="h-3 w-3 mr-0.5" />
-                            Mới
-                          </Badge>
+                          <span className="flex items-center gap-0.5 text-[9px] text-emerald-400 font-medium shrink-0">
+                            <Sparkles className="h-2.5 w-2.5" />
+                            New
+                          </span>
+                        )}
+                        {chapter.title && (
+                          <span className="text-muted-foreground text-xs truncate hidden md:inline">
+                            {chapter.title}
+                          </span>
                         )}
                       </div>
-                      {/* Title (hidden on mobile if too long) */}
-                      {chapter.title && (
-                        <span className="text-muted-foreground text-sm truncate hidden sm:inline">
-                          - {chapter.title}
-                        </span>
-                      )}
-                    </div>
-                    {/* Date */}
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0 ml-4">
-                      <Clock className="h-3 w-3" />
-                      {formatDate(chapter.published_at || chapter.created_at)}
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
+                      <span className="text-[10px] text-muted-foreground shrink-0 ml-2">
+                        {formatDate(chapter.published_at || chapter.created_at)}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-1 p-3 border-t border-border/30 bg-muted/20">
+              {/* First Page */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => goToPage(1)}
+                disabled={currentPage === 1 || isLoading}
+              >
+                <ChevronsLeft className="h-4 w-4" />
+              </Button>
+
+              {/* Previous Page */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1 || isLoading}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+
+              {/* Page Numbers */}
+              <div className="flex items-center gap-1">
+                {visiblePages[0] > 1 && (
+                  <span className="px-1 text-muted-foreground text-sm">
+                    ...
+                  </span>
+                )}
+                {visiblePages.map((page) => (
+                  <Button
+                    key={page}
+                    variant={page === currentPage ? "default" : "ghost"}
+                    size="icon"
+                    className={cn(
+                      "h-8 w-8 text-sm",
+                      page === currentPage &&
+                        "bg-primary text-primary-foreground",
+                    )}
+                    onClick={() => goToPage(page)}
+                    disabled={isLoading}
+                  >
+                    {page}
+                  </Button>
+                ))}
+                {visiblePages[visiblePages.length - 1] < totalPages && (
+                  <span className="px-1 text-muted-foreground text-sm">
+                    ...
+                  </span>
+                )}
+              </div>
+
+              {/* Next Page */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages || isLoading}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+
+              {/* Last Page */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => goToPage(totalPages)}
+                disabled={currentPage === totalPages || isLoading}
+              >
+                <ChevronsRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
         </div>
       ) : (
-        <div className="text-center py-16 border rounded-xl bg-card/30">
-          <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Chưa có chương nào được đăng</p>
+        <div className="text-center py-12 border rounded-xl bg-card/30">
+          <BookOpen className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+          <p className="text-muted-foreground text-sm">Chưa có chương</p>
         </div>
       )}
     </section>

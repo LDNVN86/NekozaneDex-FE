@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getAuthFromCookie } from "@/features/auth/server";
 import { getMyBookmarks } from "@/features/profile/server";
 import { getReadingHistory } from "@/features/reading-history/server";
+import { getNotifications } from "@/features/notifications/server";
 import { ProfileContent } from "@/features/profile/components/profile-content";
 import { createMetadata } from "@/shared/lib/seo";
 
@@ -20,17 +21,23 @@ export default async function ProfilePage() {
 
   const user = authResult.data;
 
-  // Fetch bookmarks and history in parallel
-  const [bookmarksResult, historyResult] = await Promise.all([
-    getMyBookmarks(1, 50),
-    getReadingHistory(1, 50),
-  ]);
+  // Fetch bookmarks, history, and notifications in parallel
+  const [bookmarksResult, historyResult, notificationsResult] =
+    await Promise.all([
+      getMyBookmarks(1, 50),
+      getReadingHistory(1, 50),
+      getNotifications(1, 100),
+    ]);
 
   const bookmarks = bookmarksResult.success
-    ? bookmarksResult.data.data ?? bookmarksResult.data ?? []
+    ? (bookmarksResult.data.data ?? bookmarksResult.data ?? [])
     : [];
 
-  const history = historyResult.success ? historyResult.data.data ?? [] : [];
+  const history = historyResult.success ? (historyResult.data.data ?? []) : [];
+
+  const notifications = notificationsResult.success
+    ? (notificationsResult.data.data ?? [])
+    : [];
 
   return (
     <ProfileContent
@@ -43,6 +50,7 @@ export default async function ProfilePage() {
       }}
       bookmarks={bookmarks}
       history={history}
+      notifications={notifications}
     />
   );
 }

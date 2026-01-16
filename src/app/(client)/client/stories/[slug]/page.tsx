@@ -44,25 +44,32 @@ export default async function StoryDetailPage({ params }: Props) {
   }
 
   const story = storyResult.data;
-  const chapters = chaptersResult.success ? chaptersResult.data : [];
+  const chaptersData = chaptersResult.success
+    ? chaptersResult.data
+    : { chapters: [], total: 0 };
 
   // Fetch additional data: bookmark status, comments, auth
   const [bookmarkResult, commentsResult, authResult] = await Promise.all([
     checkBookmark(story.id),
-    getStoryComments(story.id, 1, 50),
+    getStoryComments(story.id, 1, 10),
     getAuthFromCookie(),
   ]);
 
   const isBookmarked = bookmarkResult.success ? bookmarkResult.data : false;
-  const comments = commentsResult.success ? commentsResult.data.data : [];
+  const commentsData = commentsResult.success
+    ? commentsResult.data
+    : { data: [], meta: { total: 0, total_pages: 1 } };
   const user = authResult.success ? authResult.data : null;
 
   return (
     <StoryDetailClient
       story={story}
-      chapters={chapters}
+      chapters={chaptersData.chapters}
+      totalChapters={chaptersData.total}
       initialBookmarked={isBookmarked}
-      comments={comments}
+      comments={commentsData.data}
+      totalComments={commentsData.meta.total}
+      totalCommentPages={commentsData.meta.total_pages}
       currentUserId={user?.id}
       isAdmin={user?.role === "admin"}
     />

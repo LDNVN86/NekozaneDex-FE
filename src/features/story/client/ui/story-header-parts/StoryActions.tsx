@@ -26,20 +26,16 @@ export function StoryActions({
   isPending,
 }: StoryActionsProps) {
   return (
-    <div className="flex flex-wrap items-center gap-3 mt-2">
-      <Button
-        size="lg"
-        className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-        asChild
-      >
+    <div className="flex flex-wrap items-center gap-2 mt-1">
+      <Button size="default" className="bg-primary hover:bg-primary/90" asChild>
         <Link href={`/client/stories/${storySlug}/${oldestChapterNumber}`}>
-          <BookOpen className="h-5 w-5 mr-2" />
+          <BookOpen className="h-4 w-4 mr-1.5" />
           Đọc từ đầu
         </Link>
       </Button>
 
       {hasChapters && newestChapterNum && (
-        <Button size="lg" variant="outline" asChild>
+        <Button size="default" variant="outline" asChild>
           <Link href={`/client/stories/${storySlug}/${newestChapterNum}`}>
             Chương mới nhất
           </Link>
@@ -47,20 +43,19 @@ export function StoryActions({
       )}
 
       <Button
-        size="lg"
+        size="default"
         variant={isBookmarked ? "default" : "outline"}
         onClick={handleBookmarkToggle}
         disabled={isPending}
         className={cn(
-          isBookmarked &&
-            "bg-pink-500 hover:bg-pink-600 border-pink-500 text-white"
+          isBookmarked && "bg-pink-500 hover:bg-pink-600 border-pink-500",
         )}
       >
         {isPending ? (
-          <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+          <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
         ) : (
           <Heart
-            className={cn("h-5 w-5 mr-2", isBookmarked && "fill-current")}
+            className={cn("h-4 w-4 mr-1.5", isBookmarked && "fill-current")}
           />
         )}
         {isBookmarked ? "Đã lưu" : "Lưu truyện"}

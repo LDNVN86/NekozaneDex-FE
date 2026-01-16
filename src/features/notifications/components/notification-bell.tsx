@@ -81,7 +81,7 @@ export function NotificationBell({
         ) : (
           <ScrollArea className="max-h-[50vh]">
             <div className="divide-y">
-              {localNotifications.slice(0, 10).map((notification) => (
+              {localNotifications.slice(0, 5).map((notification) => (
                 <NotificationItem
                   key={notification.id}
                   notification={notification}

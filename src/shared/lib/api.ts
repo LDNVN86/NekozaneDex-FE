@@ -1,12 +1,12 @@
 import { ok, err, type Result } from "@/shared/lib/result";
-import { getAuthHeaders } from "./server-auth";
+import { getAuthHeaders, getAccessToken } from "./server-auth";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:9091/api";
 
 export async function serverFetch<T>(
   endpoint: string,
-  options?: RequestInit
+  options?: RequestInit,
 ): Promise<T> {
   const normalizedEndpoint = endpoint.startsWith("/")
     ? endpoint.slice(1)
@@ -40,9 +40,15 @@ export async function serverFetch<T>(
 
 export async function withAuthFetch<T>(
   fetcher: (headers: HeadersInit) => Promise<T>,
-  errorMessage: string
+  errorMessage: string,
 ): Promise<Result<T>> {
   try {
+    // Check if user is authenticated before making the request
+    const accessToken = await getAccessToken();
+    if (!accessToken) {
+      return err("Chưa đăng nhập");
+    }
+
     const headers = await getAuthHeaders();
     const data = await fetcher(headers);
     return ok(data);

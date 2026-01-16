@@ -8,14 +8,43 @@ import {
   updateComment,
   togglePinComment,
   reportComment,
+  getStoryComments,
 } from "../server";
 import type { Comment } from "../server";
+
+export async function loadMoreCommentsAction(
+  storyId: string,
+  page: number,
+  limit = 10,
+): Promise<{
+  success: boolean;
+  comments?: Comment[];
+  hasMore?: boolean;
+  totalPages?: number;
+  error?: string;
+}> {
+  const result = await getStoryComments(storyId, page, limit);
+
+  if (!result.success) {
+    return { success: false, error: result.error };
+  }
+
+  const { data, meta } = result.data;
+  const hasMore = meta.page < meta.total_pages;
+
+  return {
+    success: true,
+    comments: data,
+    hasMore,
+    totalPages: meta.total_pages,
+  };
+}
 
 export async function createCommentAction(
   storyId: string,
   storySlug: string,
   content: string,
-  chapterId?: string
+  chapterId?: string,
 ): Promise<{ success: boolean; error?: string; comment?: Comment }> {
   if (!content.trim()) {
     return { success: false, error: "Nội dung không được để trống" };
@@ -38,7 +67,7 @@ export async function createCommentAction(
 export async function replyCommentAction(
   parentId: string,
   storySlug: string,
-  content: string
+  content: string,
 ): Promise<{ success: boolean; error?: string; reply?: Comment }> {
   if (!content.trim()) {
     return { success: false, error: "Nội dung không được để trống" };
@@ -61,7 +90,7 @@ export async function replyCommentAction(
 export async function updateCommentAction(
   commentId: string,
   storySlug: string,
-  content: string
+  content: string,
 ): Promise<{ success: boolean; error?: string; comment?: Comment }> {
   if (!content.trim()) {
     return { success: false, error: "Nội dung không được để trống" };
@@ -83,7 +112,7 @@ export async function updateCommentAction(
 
 export async function deleteCommentAction(
   commentId: string,
-  storySlug: string
+  storySlug: string,
 ): Promise<{ success: boolean; error?: string }> {
   const result = await deleteComment(commentId);
 
@@ -97,7 +126,7 @@ export async function deleteCommentAction(
 
 export async function togglePinCommentAction(
   commentId: string,
-  storySlug: string
+  storySlug: string,
 ): Promise<{ success: boolean; error?: string; is_pinned?: boolean }> {
   const result = await togglePinComment(commentId);
 
@@ -111,7 +140,7 @@ export async function togglePinCommentAction(
 
 export async function reportCommentAction(
   commentId: string,
-  reason: string
+  reason: string,
 ): Promise<{ success: boolean; error?: string }> {
   if (!reason.trim()) {
     return { success: false, error: "Lý do không được để trống" };

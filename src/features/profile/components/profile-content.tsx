@@ -2,21 +2,30 @@
 
 import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Heart, History, Settings, BookOpen } from "lucide-react";
+import { Heart, History, Settings, BookOpen, Bell } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
-import { ProfileHeader, BookmarksTab, HistoryTab, SettingsTab } from "./ui";
+import {
+  ProfileHeader,
+  BookmarksTab,
+  HistoryTab,
+  SettingsTab,
+  NotificationHistoryTab,
+} from "./ui";
 import type { ProfileUser, BookmarkItem, HistoryItem } from "../interfaces";
+import type { Notification } from "@/features/notifications/server";
 
 interface ProfileContentProps {
   user: ProfileUser;
   bookmarks: BookmarkItem[];
   history: HistoryItem[];
+  notifications?: Notification[];
 }
 
 export function ProfileContent({
   user,
   bookmarks,
   history,
+  notifications = [],
 }: ProfileContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -45,7 +54,7 @@ export function ProfileContent({
         onValueChange={handleTabChange}
         className="space-y-6"
       >
-        <TabsList className="grid w-full grid-cols-3 max-w-md">
+        <TabsList className="grid w-full grid-cols-4 max-w-lg">
           <TabsTrigger value="bookmarks" className="gap-2">
             <Heart className="h-4 w-4" />
             <span className="hidden sm:inline">Đánh dấu</span>
@@ -53,6 +62,10 @@ export function ProfileContent({
           <TabsTrigger value="history" className="gap-2">
             <History className="h-4 w-4" />
             <span className="hidden sm:inline">Lịch sử</span>
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="gap-2">
+            <Bell className="h-4 w-4" />
+            <span className="hidden sm:inline">Thông báo</span>
           </TabsTrigger>
           <TabsTrigger value="settings" className="gap-2">
             <Settings className="h-4 w-4" />
@@ -86,6 +99,18 @@ export function ProfileContent({
 
         <TabsContent value="settings">
           <SettingsTab user={user} />
+        </TabsContent>
+
+        <TabsContent value="notifications">
+          {notifications.length > 0 ? (
+            <NotificationHistoryTab notifications={notifications} />
+          ) : (
+            <EmptyState
+              icon={<Bell className="h-12 w-12" />}
+              message="Chưa có thông báo"
+              description="Thông báo mới sẽ xuất hiện ở đây"
+            />
+          )}
         </TabsContent>
       </Tabs>
     </div>

@@ -7,3 +7,4 @@ export { ProfileInfoCard } from "./profile-info-card";
 export { ChangePasswordCard } from "./change-password-card";
 export { NotificationsCard } from "./notifications-card";
 export { DangerZoneCard } from "./danger-zone-card";
+export { NotificationHistoryTab } from "./notification-history-tab";

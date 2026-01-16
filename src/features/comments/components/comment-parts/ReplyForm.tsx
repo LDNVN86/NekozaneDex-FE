@@ -4,6 +4,7 @@ import * as React from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { MentionTextarea } from "@/shared/ui/mention-textarea";
+import { MediaPicker } from "@/shared/ui/media-picker";
 
 interface ReplyFormProps {
   showReplyForm: boolean;
@@ -33,23 +34,28 @@ export function ReplyForm({
         className="min-h-[80px] mb-2 resize-none text-sm"
         maxLength={2000}
       />
-      <div className="flex gap-2 justify-end">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowReplyForm(false)}
-        >
-          Hủy
-        </Button>
-        <Button
-          type="submit"
-          size="sm"
-          disabled={isReplying || !replyContent.trim()}
-        >
-          {isReplying && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-          Trả lời
-        </Button>
+      <div className="flex items-center justify-between">
+        <MediaPicker
+          onEmojiSelect={(emoji) => setReplyContent(replyContent + emoji)}
+        />
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowReplyForm(false)}
+          >
+            Hủy
+          </Button>
+          <Button
+            type="submit"
+            size="sm"
+            disabled={isReplying || !replyContent.trim()}
+          >
+            {isReplying && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+            Trả lời
+          </Button>
+        </div>
       </div>
     </form>
   );

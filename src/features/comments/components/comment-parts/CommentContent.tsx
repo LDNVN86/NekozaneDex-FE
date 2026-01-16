@@ -25,23 +25,58 @@ export function CommentContent({
   handleCancelEdit,
   handleSaveEdit,
 }: CommentContentProps) {
-  // Render content with highlighted @mentions
+  // Render content with highlighted @mentions and GIF images
   const renderContentWithMentions = (content: string) => {
-    const mentionRegex = /(@[a-z0-9]+)/gi;
-    const parts = content.split(mentionRegex);
-    return parts.map((part, index) => {
-      if (part.match(/^@[a-z0-9]+$/i)) {
-        return (
-          <span
-            key={index}
-            className="text-primary font-medium hover:underline cursor-pointer"
-          >
-            {part}
-          </span>
-        );
+    // First, split by GIF markdown pattern
+    const gifRegex = /!\[gif\]\((https?:\/\/[^\)]+)\)/gi;
+    const mentionRegex = /(@[a-z0-9_]+)/gi;
+
+    // Split by GIF pattern first
+    const parts = content.split(gifRegex);
+    const gifMatches = content.match(gifRegex) || [];
+
+    const result: React.ReactNode[] = [];
+
+    parts.forEach((part, partIndex) => {
+      // Render text part with mentions
+      if (part) {
+        const textParts = part.split(mentionRegex);
+        textParts.forEach((textPart, textIndex) => {
+          if (textPart.match(/^@[a-z0-9_]+$/i)) {
+            result.push(
+              <span
+                key={`mention-${partIndex}-${textIndex}`}
+                className="text-primary font-medium hover:underline cursor-pointer"
+              >
+                {textPart}
+              </span>,
+            );
+          } else if (textPart) {
+            result.push(textPart);
+          }
+        });
       }
-      return part;
+
+      // Add GIF image if there's a match for this position
+      if (partIndex < gifMatches.length) {
+        const gifUrl = gifMatches[partIndex].match(
+          /!\[gif\]\((https?:\/\/[^\)]+)\)/i,
+        )?.[1];
+        if (gifUrl) {
+          result.push(
+            <img
+              key={`gif-${partIndex}`}
+              src={gifUrl}
+              alt="GIF"
+              className="max-w-[300px] max-h-[200px] rounded-lg mt-2 mb-1"
+              loading="lazy"
+            />,
+          );
+        }
+      }
     });
+
+    return result;
   };
 
   if (isEditing) {

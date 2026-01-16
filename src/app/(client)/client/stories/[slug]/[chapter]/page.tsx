@@ -61,7 +61,10 @@ export default async function ChapterPage({ params }: Props) {
 
   const story = storyResult.data;
   const currentChapter = chapterResult.data;
-  const chapters = chaptersResult.success ? chaptersResult.data : [];
+  const chaptersData = chaptersResult.success
+    ? chaptersResult.data
+    : { chapters: [], total: 0 };
+  const chapters = chaptersData.chapters || [];
 
   // Second: fetch progress using actual story ID (not slug)
   let savedScrollPos: number | undefined;

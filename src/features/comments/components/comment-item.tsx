@@ -9,15 +9,17 @@ import {
   togglePinCommentAction,
   reportCommentAction,
 } from "../actions/comment-actions";
+import { useLikeComment } from "../hooks/useLikeComment";
 import type { Comment } from "../server";
-
-// Sub-components
-import { CommentHeader } from "./comment-parts/CommentHeader";
-import { CommentActions } from "./comment-parts/CommentActions";
-import { CommentContent } from "./comment-parts/CommentContent";
-import { CommentFooter } from "./comment-parts/CommentFooter";
-import { ReplyForm } from "./comment-parts/ReplyForm";
-import { ReportDialog } from "./comment-parts/ReportDialog";
+import {
+  CommentActionBar,
+  CommentAvatar,
+  CommentBubbleHeader,
+  CommentContent,
+  CommentReplies,
+  ReplyForm,
+  ReportDialog,
+} from "./comment-parts";
 
 interface CommentItemProps {
   comment: Comment;
@@ -40,31 +42,44 @@ export function CommentItem({
   isPending,
   isReply = false,
 }: CommentItemProps) {
+  // Reply state
   const [showReplies, setShowReplies] = React.useState(false);
   const [showReplyForm, setShowReplyForm] = React.useState(false);
   const [replyContent, setReplyContent] = React.useState("");
   const [isReplying, startReplyTransition] = React.useTransition();
 
+  // Report state
   const [isReporting, setIsReporting] = React.useState(false);
   const [reportReason, setReportReason] = React.useState("");
   const [isSubmittingReport, startReportTransition] = React.useTransition();
 
+  // Edit state
   const [isEditing, setIsEditing] = React.useState(false);
   const [editContent, setEditContent] = React.useState(comment.content);
   const [isUpdating, startUpdateTransition] = React.useTransition();
 
-  const [likeCount, setLikeCount] = React.useState(comment.like_count || 0);
-  const [isLiked, setIsLiked] = React.useState(comment.user_has_liked || false);
-  const [isLiking, setIsLiking] = React.useState(false);
-
+  // Pin state
   const [isPinning, startPinTransition] = React.useTransition();
 
+  // Like hook
+  const { likeCount, isLiked, isLiking, handleLike } = useLikeComment({
+    commentId: comment.id,
+    initialLikeCount: comment.like_count || 0,
+    initialIsLiked: comment.user_has_liked || false,
+    currentUserId,
+  });
+
+  // Permissions
   const isOwner = currentUserId === comment.user_id;
   const canDelete = isOwner || !!isAdmin;
   const canEdit = isOwner;
   const canPin = !!isAdmin && !isReply;
-  const hasReplies = !!(comment.replies && comment.replies.length > 0);
 
+  const userProfileUrl = comment.user?.tag_name
+    ? `/client/users/${comment.user.tag_name}`
+    : null;
+
+  // Handlers
   const handleReply = (e: React.FormEvent) => {
     e.preventDefault();
     if (!replyContent.trim() || isReplying) return;
@@ -73,13 +88,13 @@ export function CommentItem({
       const result = await replyCommentAction(
         comment.id,
         storySlug,
-        replyContent
+        replyContent,
       );
       if (result.success && result.reply) {
         setReplyContent("");
         setShowReplyForm(false);
         setShowReplies(true);
-        toast.success("Đã trả lời comment");
+        toast.success("Đã trả lời");
         onUpdate(comment.id, {
           ...comment,
           replies: [...(comment.replies || []), result.reply],
@@ -101,12 +116,12 @@ export function CommentItem({
       const result = await updateCommentAction(
         comment.id,
         storySlug,
-        editContent.trim()
+        editContent.trim(),
       );
       if (result.success && result.comment) {
         onUpdate(comment.id, result.comment);
         setIsEditing(false);
-        toast.success("Đã cập nhật comment");
+        toast.success("Đã cập nhật");
       } else {
         toast.error(result.error || "Không thể cập nhật");
       }
@@ -118,12 +133,10 @@ export function CommentItem({
     startPinTransition(async () => {
       const result = await togglePinCommentAction(comment.id, storySlug);
       if (result.success) {
-        toast.success(
-          result.is_pinned ? "Đã ghim bình luận" : "Đã bỏ ghim bình luận"
-        );
+        toast.success(result.is_pinned ? "Đã ghim" : "Đã bỏ ghim");
         onUpdate(comment.id, { ...comment, is_pinned: result.is_pinned });
       } else {
-        toast.error(result.error || "Không thể cập nhật trạng thái ghim");
+        toast.error(result.error || "Lỗi");
       }
     });
   };
@@ -133,102 +146,115 @@ export function CommentItem({
     startReportTransition(async () => {
       const result = await reportCommentAction(comment.id, reportReason.trim());
       if (result.success) {
-        toast.success("Đã gửi báo cáo bình luận");
+        toast.success("Đã báo cáo");
         setIsReporting(false);
         setReportReason("");
       } else {
-        toast.error(result.error || "Không thể gửi báo cáo");
+        toast.error(result.error || "Lỗi");
       }
     });
   };
 
+  const handleReplyToggle = () => {
+    setShowReplyForm(!showReplyForm);
+    if (!showReplyForm) setReplyContent("");
+  };
+
   return (
-    <div
-      className={cn("group", isReply && "ml-8 border-l-2 border-muted pl-4")}
-    >
-      <div
-        className={cn(
-          "bg-card rounded-xl p-4 border transition-all",
-          comment.is_pinned
-            ? "border-primary/50 bg-primary/5"
-            : "border-border/50"
-        )}
-      >
-        <div className="flex items-start justify-between gap-3 mb-2">
-          <CommentHeader comment={comment} />
-          <CommentActions
-            comment={comment}
-            currentUserId={currentUserId}
-            isAdmin={isAdmin}
-            canEdit={canEdit}
-            canDelete={canDelete}
-            canPin={canPin}
-            isEditing={isEditing}
-            isPending={isPending}
-            isPinning={isPinning}
-            handlePin={handlePin}
-            handleEdit={() => setIsEditing(true)}
-            onDelete={onDelete}
-            setIsReporting={setIsReporting}
-            setShowReplyForm={setShowReplyForm}
-            showReplyForm={showReplyForm}
-            setReplyContent={setReplyContent}
-          />
-        </div>
-
-        <CommentContent
-          comment={comment}
-          isEditing={isEditing}
-          editContent={editContent}
-          setEditContent={setEditContent}
-          isUpdating={isUpdating}
-          handleCancelEdit={() => setIsEditing(false)}
-          handleSaveEdit={handleSaveEdit}
-        />
-
-        <CommentFooter
-          comment={comment}
-          currentUserId={currentUserId}
-          isEditing={isEditing}
-          isLiked={isLiked}
-          setIsLiked={setIsLiked}
-          likeCount={likeCount}
-          setLikeCount={setLikeCount}
-          isLiking={isLiking}
-          setIsLiking={setIsLiking}
-          showReplies={showReplies}
-          setShowReplies={setShowReplies}
-          hasReplies={hasReplies}
-        />
-      </div>
-
-      <ReplyForm
-        showReplyForm={showReplyForm}
-        setShowReplyForm={setShowReplyForm}
-        replyContent={replyContent}
-        setReplyContent={setReplyContent}
-        isReplying={isReplying}
-        handleReply={handleReply}
-      />
-
-      {showReplies && hasReplies && (
-        <div className="mt-3 space-y-3">
-          {comment.replies!.map((reply) => (
-            <CommentItem
-              key={reply.id}
-              comment={reply}
-              storySlug={storySlug}
-              currentUserId={currentUserId}
-              isAdmin={isAdmin}
-              onDelete={onDelete}
-              onUpdate={onUpdate}
-              isPending={isPending}
-              isReply
-            />
-          ))}
-        </div>
+    <div className={cn("group", isReply && "pl-12 relative")}>
+      {/* Thread line for replies */}
+      {isReply && (
+        <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border/50" />
       )}
 
+      <div className="flex gap-3">
+        {/* Avatar */}
+        <CommentAvatar comment={comment} />
+
+        {/* Content bubble */}
+        <div className="flex-1 min-w-0">
+          <div
+            className={cn(
+              "rounded-2xl px-4 py-2.5 transition-colors",
+              comment.is_pinned
+                ? "bg-primary/10 ring-1 ring-primary/20"
+                : "bg-muted/50 hover:bg-muted/70",
+            )}
+          >
+            {/* Header */}
+            <CommentBubbleHeader
+              comment={comment}
+              userProfileUrl={userProfileUrl}
+            />
+
+            {/* Content */}
+            <CommentContent
+              comment={comment}
+              isEditing={isEditing}
+              editContent={editContent}
+              setEditContent={setEditContent}
+              isUpdating={isUpdating}
+              handleCancelEdit={() => setIsEditing(false)}
+              handleSaveEdit={handleSaveEdit}
+            />
+          </div>
+
+          {/* Actions row - FB style */}
+          {!isEditing && (
+            <CommentActionBar
+              comment={comment}
+              likeCount={likeCount}
+              isLiked={isLiked}
+              isLiking={isLiking}
+              currentUserId={currentUserId}
+              isOwner={isOwner}
+              canEdit={canEdit}
+              canDelete={canDelete}
+              canPin={canPin}
+              isReply={isReply}
+              showReplyForm={showReplyForm}
+              onLike={handleLike}
+              onReplyToggle={handleReplyToggle}
+              onEdit={() => setIsEditing(true)}
+              onPin={handlePin}
+              onReport={() => setIsReporting(true)}
+              onDelete={() => onDelete(comment.id)}
+            />
+          )}
+
+          {/* Reply form */}
+          <ReplyForm
+            showReplyForm={showReplyForm}
+            setShowReplyForm={setShowReplyForm}
+            replyContent={replyContent}
+            setReplyContent={setReplyContent}
+            isReplying={isReplying}
+            handleReply={handleReply}
+          />
+
+          {/* Replies */}
+          <CommentReplies
+            comment={comment}
+            showReplies={showReplies}
+            setShowReplies={setShowReplies}
+            renderReply={(reply) => (
+              <CommentItem
+                key={reply.id}
+                comment={reply}
+                storySlug={storySlug}
+                currentUserId={currentUserId}
+                isAdmin={isAdmin}
+                onDelete={onDelete}
+                onUpdate={onUpdate}
+                isPending={isPending}
+                isReply
+              />
+            )}
+          />
+        </div>
+      </div>
+
+      {/* Report dialog */}
       <ReportDialog
         isReporting={isReporting}
         setIsReporting={setIsReporting}
