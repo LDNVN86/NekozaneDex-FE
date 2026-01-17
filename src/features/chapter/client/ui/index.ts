@@ -3,3 +3,8 @@ export { ReaderSettings } from "./reader-settings";
 export { ChapterContent } from "./chapter-content";
 export { ReaderFooter } from "./reader-footer";
 export { HorizontalReader } from "./horizontal-reader";
+export { ReaderLoading } from "./reader-loading";
+export { VerticalReaderView } from "./vertical-reader-view";
+export { ReaderChapterList } from "./reader-chapter-list";
+export { AutoScrollControl } from "./auto-scroll-control";
+export { LongStripReaderView } from "./long-strip-reader-view";

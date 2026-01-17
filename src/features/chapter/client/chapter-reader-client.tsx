@@ -3,15 +3,22 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import type { Story, Chapter } from "@/features/story";
-import { useReadingProgress } from "@/features/reading-history";
-import { useReaderControls, useFullscreen } from "./hooks";
+import {
+  useReaderSettings,
+  useReaderControls,
+  useFullscreen,
+  useReaderFilters,
+  useAutoScroll,
+} from "./hooks";
 import {
   ReaderHeader,
-  ChapterContent,
   ReaderFooter,
+  ReaderLoading,
+  VerticalReaderView,
   HorizontalReader,
+  AutoScrollControl,
+  LongStripReaderView,
 } from "./ui";
-import type { PageFitMode, ReadingMode } from "./ui/reader-settings";
 
 interface ChapterReaderClientProps {
   story: Story;
@@ -20,6 +27,10 @@ interface ChapterReaderClientProps {
   savedScrollPosition?: number;
 }
 
+/**
+ * Main chapter reader wrapper.
+ * Shows loading state until settings load, then renders appropriate mode.
+ */
 export function ChapterReaderClient({
   story,
   chapter,
@@ -28,119 +39,72 @@ export function ChapterReaderClient({
 }: ChapterReaderClientProps) {
   const router = useRouter();
   const [zoom, setZoom] = React.useState(100);
-  const [pageFit, setPageFit] = React.useState<PageFitMode>("width");
-  const [readingMode, setReadingMode] = React.useState<ReadingMode>("vertical");
-  const hasScrolledRef = React.useRef(false);
 
-  // Reader controls: auto-hide UI
+  // Load reader settings (mode, fit) from localStorage
+  const { readingMode, pageFit, isLoaded, setReadingMode, setPageFit } =
+    useReaderSettings();
+
+  // UI controls
   const { isVisible, toggle, scrollProgress } = useReaderControls();
-
-  // Fullscreen control
   const { isFullscreen, toggleFullscreen } = useFullscreen();
 
-  // Auto-save reading progress
-  useReadingProgress(story.id, chapter.id);
+  // Visual filters (brightness, color)
+  const {
+    brightness,
+    colorFilter,
+    setBrightness,
+    setColorFilter,
+    filterStyle,
+  } = useReaderFilters();
 
-  // Handle scroll on chapter load - runs on every chapter change
-  React.useLayoutEffect(() => {
-    // Reset flag on chapter change
-    hasScrolledRef.current = false;
-  }, [chapter.id]);
+  // Auto scroll for vertical and longstrip modes
+  const isScrollMode =
+    readingMode === "vertical" || readingMode === "longstrip";
+  const {
+    isScrolling,
+    speed: scrollSpeed,
+    toggle: toggleAutoScroll,
+    setSpeed: setScrollSpeed,
+  } = useAutoScroll({ enabled: isScrollMode });
 
-  React.useEffect(() => {
-    if (hasScrolledRef.current) return;
-    hasScrolledRef.current = true;
-
-    // If we have saved position > 0:  This means came from "Đọc tiếp"
-    // Otherwise scroll to top (new chapter or normal navigation)
-    if (savedScrollPosition && savedScrollPosition > 0) {
-      // Delay to wait for content to render
-      const timer = setTimeout(() => {
-        const docHeight =
-          document.documentElement.scrollHeight - window.innerHeight;
-        if (docHeight > 0) {
-          const scrollTo = (savedScrollPosition / 100) * docHeight;
-          window.scrollTo({ top: scrollTo, behavior: "smooth" });
-        }
-      }, 300);
-      return () => clearTimeout(timer);
-    } else {
-      // Scroll to top immediately for normal chapter navigation
-      window.scrollTo({ top: 0, behavior: "instant" });
-    }
-  }, [chapter.id, savedScrollPosition]);
-
-  // Derived data
-  const sortedChapters = React.useMemo(() => {
-    return [...chapters].sort((a, b) => a.chapter_number - b.chapter_number);
-  }, [chapters]);
-
-  const currentIndex = sortedChapters.findIndex(
-    (c) => c.chapter_number === chapter.chapter_number
-  );
-  const prevChapter =
-    currentIndex > 0 ? sortedChapters[currentIndex - 1] : null;
-  const nextChapter =
-    currentIndex < sortedChapters.length - 1
-      ? sortedChapters[currentIndex + 1]
-      : null;
-
-  // Note: scrollProgress now comes from useReaderControls hook
-
-  // Keyboard navigation
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      ) {
-        return;
-      }
-
-      switch (e.key) {
-        case "ArrowLeft":
-          if (prevChapter) {
-            router.push(
-              `/client/stories/${story.slug}/${prevChapter.chapter_number}`
-            );
-          }
-          break;
-        case "ArrowRight":
-          if (nextChapter) {
-            router.push(
-              `/client/stories/${story.slug}/${nextChapter.chapter_number}`
-            );
-          }
-          break;
-        case "f":
-        case "F":
-          toggleFullscreen();
-          break;
-        case "Escape":
-          // ESC exits fullscreen (browser handles this, but show UI)
-          if (isFullscreen) toggle();
-          break;
-      }
+  // Navigation helpers
+  const { prevChapter, nextChapter, sortedChapters } = React.useMemo(() => {
+    const sorted = [...chapters].sort(
+      (a, b) => a.chapter_number - b.chapter_number,
+    );
+    const idx = sorted.findIndex(
+      (c) => c.chapter_number === chapter.chapter_number,
+    );
+    return {
+      sortedChapters: sorted,
+      prevChapter: idx > 0 ? sorted[idx - 1] : null,
+      nextChapter: idx < sorted.length - 1 ? sorted[idx + 1] : null,
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [
-    prevChapter,
-    nextChapter,
-    story.slug,
-    router,
-    toggleFullscreen,
-    isFullscreen,
-    toggle,
-  ]);
+  }, [chapters, chapter.chapter_number]);
 
   const handleNavigate = (chapterNumber: number) => {
     router.push(`/client/stories/${story.slug}/${chapterNumber}`);
   };
 
+  // Fullscreen keyboard shortcut (works in both modes)
+  React.useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement) return;
+      if (e.key === "f" || e.key === "F") toggleFullscreen();
+      if (e.key === "Escape" && isFullscreen) toggle();
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [toggleFullscreen, isFullscreen, toggle]);
+
+  // Show loading skeleton until settings loaded
+  if (!isLoaded) {
+    return <ReaderLoading />;
+  }
+
   return (
     <div className="min-h-screen transition-colors duration-300 bg-black text-gray-200">
-      {/* Progress Bar - always visible at top */}
+      {/* Progress bar */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-muted z-50">
         <div
           className="h-full bg-primary transition-all duration-150"
@@ -151,7 +115,7 @@ export function ChapterReaderClient({
       <ReaderHeader
         story={story}
         chapter={chapter}
-        chapters={chapters}
+        chapters={sortedChapters}
         prevChapter={prevChapter}
         nextChapter={nextChapter}
         totalChapters={chapters.length}
@@ -165,35 +129,46 @@ export function ChapterReaderClient({
         onToggleFullscreen={toggleFullscreen}
         readingMode={readingMode}
         onReadingModeChange={setReadingMode}
+        brightness={brightness}
+        onBrightnessChange={setBrightness}
+        colorFilter={colorFilter}
+        onColorFilterChange={setColorFilter}
       />
 
-      {/* Content area - switches between vertical and horizontal modes */}
-      {readingMode === "horizontal" ? (
-        <div className="pt-14 pb-16">
-          <HorizontalReader
+      {/* Render based on mode - apply visual filters */}
+      <div style={filterStyle}>
+        {readingMode === "horizontal" ? (
+          <div className="pt-14 pb-16">
+            <HorizontalReader
+              story={story}
+              chapter={chapter}
+              isVisible={isVisible}
+              onToggle={toggle}
+              savedScrollPosition={savedScrollPosition}
+              prevChapter={prevChapter}
+              nextChapter={nextChapter}
+            />
+          </div>
+        ) : readingMode === "longstrip" ? (
+          <LongStripReaderView
+            story={story}
             chapter={chapter}
-            isVisible={isVisible}
-            onToggle={toggle}
-            initialPage={
-              savedScrollPosition
-                ? Math.floor(
-                    (savedScrollPosition / 100) * (chapter.images?.length || 1)
-                  )
-                : 0
-            }
+            chapters={chapters}
+            savedScrollPosition={savedScrollPosition}
+            onToggleUI={toggle}
           />
-        </div>
-      ) : (
-        <div
-          className="pt-14 pb-16 cursor-pointer"
-          onClick={toggle}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === " " && toggle()}
-        >
-          <ChapterContent chapter={chapter} zoom={zoom} pageFit={pageFit} />
-        </div>
-      )}
+        ) : (
+          <VerticalReaderView
+            story={story}
+            chapter={chapter}
+            chapters={chapters}
+            zoom={zoom}
+            pageFit={pageFit}
+            savedScrollPosition={savedScrollPosition}
+            onToggleUI={toggle}
+          />
+        )}
+      </div>
 
       <ReaderFooter
         storySlug={story.slug}
@@ -201,6 +176,17 @@ export function ChapterReaderClient({
         nextChapter={nextChapter}
         isVisible={isVisible}
       />
+
+      {/* Auto scroll control - only in scroll modes */}
+      {isScrollMode && (
+        <AutoScrollControl
+          isScrolling={isScrolling}
+          speed={scrollSpeed}
+          onToggle={toggleAutoScroll}
+          onSpeedChange={setScrollSpeed}
+          isVisible={isVisible}
+        />
+      )}
     </div>
   );
 }

@@ -8,7 +8,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 import { cn } from "@/shared/lib/utils";
 
 export type PageFitMode = "width" | "height" | "original";
-export type ReadingMode = "vertical" | "horizontal";
+export type ReadingMode = "vertical" | "horizontal" | "longstrip";
+export type ColorFilter = "none" | "sepia" | "night";
 
 interface ReaderSettingsProps {
   zoom: number;
@@ -19,6 +20,11 @@ interface ReaderSettingsProps {
   onToggleFullscreen: () => void;
   readingMode: ReadingMode;
   onReadingModeChange: (mode: ReadingMode) => void;
+  // Visual filters
+  brightness: number;
+  onBrightnessChange: (value: number) => void;
+  colorFilter: ColorFilter;
+  onColorFilterChange: (filter: ColorFilter) => void;
 }
 
 const PAGE_FIT_OPTIONS: { value: PageFitMode; label: string }[] = [
@@ -34,6 +40,17 @@ const READING_MODE_OPTIONS: {
 }[] = [
   { value: "vertical", label: "Dọc", desc: "Cuộn dọc" },
   { value: "horizontal", label: "Ngang", desc: "Lật trang" },
+  { value: "longstrip", label: "Webtoon", desc: "Liên tục" },
+];
+
+const COLOR_FILTER_OPTIONS: {
+  value: ColorFilter;
+  label: string;
+  desc: string;
+}[] = [
+  { value: "none", label: "Không", desc: "Mặc định" },
+  { value: "sepia", label: "Sepia", desc: "Ấm mắt" },
+  { value: "night", label: "Đêm", desc: "Đảo màu" },
 ];
 
 export function ReaderSettings({
@@ -45,6 +62,10 @@ export function ReaderSettings({
   onToggleFullscreen,
   readingMode,
   onReadingModeChange,
+  brightness,
+  onBrightnessChange,
+  colorFilter,
+  onColorFilterChange,
 }: ReaderSettingsProps) {
   const [open, setOpen] = React.useState(false);
 
@@ -59,9 +80,11 @@ export function ReaderSettings({
           <Settings className="h-5 w-5" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80" align="end">
-        <div className="space-y-5">
-          <h4 className="font-semibold text-center">Cài đặt đọc truyện</h4>
+      <PopoverContent className="w-80 max-h-[80vh] overflow-y-auto" align="end">
+        <div className="space-y-4">
+          <h4 className="font-semibold text-center sticky top-0 bg-popover pb-2">
+            Cài đặt đọc truyện
+          </h4>
 
           {/* Fullscreen Toggle */}
           <div className="flex items-center justify-between">
@@ -97,7 +120,7 @@ export function ReaderSettings({
                   size="sm"
                   className={cn(
                     "text-xs h-10 flex flex-col gap-0.5",
-                    readingMode === option.value && "bg-primary"
+                    readingMode === option.value && "bg-primary",
                   )}
                   onClick={() => onReadingModeChange(option.value)}
                 >
@@ -119,7 +142,7 @@ export function ReaderSettings({
                   size="sm"
                   className={cn(
                     "text-xs h-8",
-                    pageFit === option.value && "bg-primary"
+                    pageFit === option.value && "bg-primary",
                   )}
                   onClick={() => onPageFitChange(option.value)}
                 >
@@ -169,12 +192,60 @@ export function ReaderSettings({
             />
           </div>
 
-          {/* Keyboard Shortcuts */}
+          {/* Brightness Control */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span>Độ sáng: {brightness}%</span>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2 text-xs"
+                onClick={() => onBrightnessChange(100)}
+              >
+                Reset
+              </Button>
+            </div>
+            <Slider
+              value={[brightness]}
+              min={50}
+              max={150}
+              step={5}
+              onValueChange={([v]) => onBrightnessChange(v)}
+            />
+          </div>
+
+          {/* Color Filter */}
+          <div className="space-y-2">
+            <span className="text-sm">Bộ lọc màu</span>
+            <div className="grid grid-cols-3 gap-2">
+              {COLOR_FILTER_OPTIONS.map((opt) => (
+                <Button
+                  key={opt.value}
+                  variant={colorFilter === opt.value ? "default" : "outline"}
+                  size="sm"
+                  className={cn(
+                    "text-xs h-10 flex flex-col gap-0.5",
+                    colorFilter === opt.value && "bg-primary",
+                  )}
+                  onClick={() => onColorFilterChange(opt.value)}
+                >
+                  <span className="font-medium">{opt.label}</span>
+                  <span className="text-[10px] opacity-70">{opt.desc}</span>
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          {/* Keyboard & Gesture Shortcuts */}
           <div className="text-xs text-muted-foreground space-y-1 pt-4 border-t">
-            <p className="font-medium mb-2">Phím tắt:</p>
-            <p>← → : Chuyển chương</p>
-            <p>F : Toàn màn hình</p>
-            <p>Tap : Ẩn/hiện menu</p>
+            <p className="font-medium mb-2">Phím tắt & Cử chỉ:</p>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+              <p>← → : Chuyển trang/chương</p>
+              <p>F : Toàn màn hình</p>
+              <p>Tap trái/phải : Lật trang</p>
+              <p>Tap giữa : Ẩn/hiện menu</p>
+              <p>Double-tap : Zoom 2x</p>
+            </div>
           </div>
         </div>
       </PopoverContent>

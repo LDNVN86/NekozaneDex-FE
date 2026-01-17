@@ -1,3 +1,5 @@
+"use client";
+
 import type { Chapter } from "@/features/story";
 import { cn } from "@/shared/lib/utils";
 import type { PageFitMode } from "./reader-settings";
@@ -24,7 +26,7 @@ export function ChapterContent({
       <div
         className={cn(
           "mx-auto flex flex-col items-center gap-1 transition-all duration-300",
-          pageFit === "original" && "overflow-x-auto"
+          pageFit === "original" && "overflow-x-auto",
         )}
         style={{
           width: pageFit === "original" ? "auto" : `${zoom}%`,
@@ -46,7 +48,7 @@ export function ChapterContent({
                 "relative bg-muted/20",
                 pageFit === "width" && "w-full max-w-4xl",
                 pageFit === "height" && "flex justify-center",
-                pageFit === "original" && "flex justify-center"
+                pageFit === "original" && "flex justify-center",
               )}
             >
               <img
