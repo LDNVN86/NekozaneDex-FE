@@ -27,7 +27,7 @@ const mobileNavigation = [
   { name: "Trang chủ", href: "/", icon: Book },
   { name: "Thể loại", href: "/client/genres", icon: Menu },
   { name: "Xếp hạng", href: "/client/rankings", icon: Heart },
-  { name: "Tìm kiếm", href: "/client/search", icon: Search },
+  { name: "Tìm kiếm", href: "/client/stories", icon: Search },
 ];
 
 interface MobileMenuProps {
@@ -125,7 +125,7 @@ export function MobileMenu({
                       "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
                       isActive
                         ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
                     )}
                   >
                     <Icon className="h-5 w-5" />

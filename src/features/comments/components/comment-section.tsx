@@ -14,8 +14,10 @@ import {
   CommentForm,
   CommentFormGuest,
   CommentSkeleton,
+  CommentSortSelect,
   Pagination,
 } from "./comment-parts";
+import type { CommentSortOption } from "./comment-parts";
 import type { Comment } from "../server";
 
 interface CommentSectionProps {
@@ -48,6 +50,9 @@ export function CommentSection({
   const [pages, setPages] = React.useState(totalPages);
   const [isLoadingPage, setIsLoadingPage] = React.useState(false);
 
+  // Sorting state
+  const [sortBy, setSortBy] = React.useState<CommentSortOption>("newest");
+
   // Realtime updates
   const { processedIdsRef } = useRealtimeComments({
     storyId,
@@ -56,15 +61,17 @@ export function CommentSection({
   });
 
   // Pagination handler
-  const goToPage = async (page: number) => {
-    if (page < 1 || page > pages || page === currentPage || isLoadingPage)
-      return;
+  const goToPage = async (page: number, newSortBy?: CommentSortOption) => {
+    const targetSortBy = newSortBy ?? sortBy;
+    if (page < 1 || page > pages || isLoadingPage) return;
+    if (page === currentPage && !newSortBy) return;
 
     setIsLoadingPage(true);
     const result = await loadMoreCommentsAction(
       storyId,
       page,
       COMMENTS_PER_PAGE,
+      targetSortBy,
     );
 
     if (result.success && result.comments) {
@@ -75,6 +82,12 @@ export function CommentSection({
       toast.error(result.error || "Không thể tải bình luận");
     }
     setIsLoadingPage(false);
+  };
+
+  // Sort change handler
+  const handleSortChange = (newSortBy: CommentSortOption) => {
+    setSortBy(newSortBy);
+    goToPage(1, newSortBy); // Reload from page 1 with new sort
   };
 
   // Submit new comment
@@ -130,11 +143,14 @@ export function CommentSection({
   return (
     <section className="mt-8">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-6">
-        <MessageCircle className="h-5 w-5 text-primary" />
-        <h2 className="text-xl font-bold">
-          Bình luận ({localComments.length})
-        </h2>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <MessageCircle className="h-5 w-5 text-primary" />
+          <h2 className="text-xl font-bold">
+            Bình luận ({localComments.length})
+          </h2>
+        </div>
+        <CommentSortSelect value={sortBy} onChange={handleSortChange} />
       </div>
 
       {/* Comment Form */}

@@ -12,16 +12,16 @@ export const CoverImage = ({
   isHot?: boolean;
 }) => {
   return (
-    <div className="relative aspect-3/4 overflow-hidden bg-muted">
+    <div className="relative aspect-3/4 overflow-hidden bg-muted h-full">
       <img
         src={
           url ||
           `/placeholder.svg?height=400&width=300&query=${encodeURIComponent(
-            title + " novel cover"
+            title + " novel cover",
           )}`
         }
         alt={title}
-        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        className="h-full w-full object-cover transition-transform duration-300 group-hover/card:scale-105"
       />
       {/* Overlay Gradient */}
       <div className="absolute inset-0 bg-linear-to-t from-background/90 via-transparent to-transparent" />

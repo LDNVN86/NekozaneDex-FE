@@ -121,9 +121,17 @@ export function CommentContent({
     );
   }
 
+  // Check if comment was edited
+  const isEdited = comment.updated_at !== comment.created_at;
+
   return (
     <p className="text-sm whitespace-pre-wrap">
       {renderContentWithMentions(comment.content)}
+      {isEdited && (
+        <span className="text-xs text-muted-foreground ml-1">
+          (đã chỉnh sửa)
+        </span>
+      )}
     </p>
   );
 }

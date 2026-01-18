@@ -43,14 +43,15 @@ interface PaginatedComments {
 export async function getStoryComments(
   storyId: string,
   page = 1,
-  limit = 20
+  limit = 20,
+  sortBy = "newest",
 ): Promise<Result<PaginatedComments>> {
   try {
     const { getAuthHeaders } = await import("@/shared/lib/server-auth");
     const headers = await getAuthHeaders();
     const data = await serverFetch<PaginatedComments>(
-      `/comments/story/${storyId}?page=${page}&limit=${limit}`,
-      { headers }
+      `/comments/story/${storyId}?page=${page}&limit=${limit}&sort=${sortBy}`,
+      { headers },
     );
     return { success: true, data };
   } catch (error) {
@@ -67,14 +68,14 @@ export async function getStoryComments(
 export async function getChapterComments(
   chapterId: string,
   page = 1,
-  limit = 20
+  limit = 20,
 ): Promise<Result<PaginatedComments>> {
   try {
     const { getAuthHeaders } = await import("@/shared/lib/server-auth");
     const headers = await getAuthHeaders();
     const data = await serverFetch<PaginatedComments>(
       `/chapters/${chapterId}/comments?page=${page}&limit=${limit}`,
-      { headers }
+      { headers },
     );
     return { success: true, data };
   } catch (error) {
@@ -91,7 +92,7 @@ export async function getChapterComments(
 export async function createComment(
   storyId: string,
   content: string,
-  chapterId?: string
+  chapterId?: string,
 ): Promise<Result<Comment>> {
   return withAuthFetch(async (headers) => {
     const body: { content: string; chapter_id?: string } = { content };
@@ -103,7 +104,7 @@ export async function createComment(
         method: "POST",
         headers,
         body: JSON.stringify(body),
-      }
+      },
     );
     return res.data;
   }, "Không thể tạo comment");
@@ -114,7 +115,7 @@ export async function createComment(
  */
 export async function replyToComment(
   parentId: string,
-  content: string
+  content: string,
 ): Promise<Result<Comment>> {
   return withAuthFetch(async (headers) => {
     const res = await serverFetch<{ data: Comment }>(
@@ -123,7 +124,7 @@ export async function replyToComment(
         method: "POST",
         headers,
         body: JSON.stringify({ content }),
-      }
+      },
     );
     return res.data;
   }, "Không thể trả lời comment");
@@ -146,7 +147,7 @@ export async function deleteComment(commentId: string): Promise<Result<void>> {
  */
 export async function updateComment(
   commentId: string,
-  content: string
+  content: string,
 ): Promise<Result<Comment>> {
   return withAuthFetch(async (headers) => {
     const res = await serverFetch<{ data: Comment }>(`/comments/${commentId}`, {
@@ -162,7 +163,7 @@ export async function updateComment(
  * Pin or Unpin a comment (Admin only)
  */
 export async function togglePinComment(
-  commentId: string
+  commentId: string,
 ): Promise<Result<{ is_pinned: boolean }>> {
   return withAuthFetch(async (headers) => {
     const res = await serverFetch<{ data: { is_pinned: boolean } }>(
@@ -170,7 +171,7 @@ export async function togglePinComment(
       {
         method: "POST",
         headers,
-      }
+      },
     );
     return res.data;
   }, "Không thể ghim bình luận");
@@ -181,7 +182,7 @@ export async function togglePinComment(
  */
 export async function reportComment(
   commentId: string,
-  reason: string
+  reason: string,
 ): Promise<Result<void>> {
   return withAuthFetch(async (headers) => {
     await serverFetch(`/comments/${commentId}/report`, {

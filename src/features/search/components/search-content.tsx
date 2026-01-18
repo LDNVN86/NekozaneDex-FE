@@ -25,8 +25,9 @@ export function SearchContent({
   const [query, setQuery] = React.useState(initialQuery);
   const [selectedGenres, setSelectedGenres] =
     React.useState<string[]>(initialGenres);
+  const [genreMode, setGenreMode] = React.useState<"AND" | "OR">("OR");
   const [showFilters, setShowFilters] = React.useState(
-    initialGenres.length > 0
+    initialGenres.length > 0,
   );
   const [isSearching, setIsSearching] = React.useState(false);
 
@@ -41,6 +42,9 @@ export function SearchContent({
 
       if (selectedGenres.length > 0) {
         params.set("genres", selectedGenres.join(","));
+        if (genreMode === "AND") {
+          params.set("genre_mode", "AND");
+        }
       }
 
       const newUrl = `/client/search?${params.toString()}`;
@@ -53,14 +57,18 @@ export function SearchContent({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [query, selectedGenres, router, searchParams]);
+  }, [query, selectedGenres, genreMode, router, searchParams]);
 
   const toggleGenre = (genreSlug: string) => {
     setSelectedGenres((prev) =>
       prev.includes(genreSlug)
         ? prev.filter((g) => g !== genreSlug)
-        : [...prev, genreSlug]
+        : [...prev, genreSlug],
     );
+  };
+
+  const toggleGenreMode = () => {
+    setGenreMode((prev) => (prev === "AND" ? "OR" : "AND"));
   };
 
   const clearFilters = () => {
@@ -88,7 +96,9 @@ export function SearchContent({
         <GenreFilter
           genres={genres}
           selectedGenres={selectedGenres}
+          genreMode={genreMode}
           onToggleGenre={toggleGenre}
+          onToggleGenreMode={toggleGenreMode}
           onClearFilters={clearFilters}
         />
       )}

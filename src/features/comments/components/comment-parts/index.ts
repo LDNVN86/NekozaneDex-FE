@@ -8,6 +8,8 @@ export { CommentForm, CommentFormGuest } from "./CommentForm";
 export { CommentHeader } from "./CommentHeader";
 export { CommentReplies } from "./CommentReplies";
 export { CommentSkeleton } from "./CommentSkeleton";
+export { CommentSortSelect } from "./CommentSortSelect";
+export type { CommentSortOption } from "./CommentSortSelect";
 export { Pagination } from "./Pagination";
 export { ReplyForm } from "./ReplyForm";
 export { ReportDialog } from "./ReportDialog";

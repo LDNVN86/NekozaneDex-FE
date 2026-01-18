@@ -16,6 +16,7 @@ export async function loadMoreCommentsAction(
   storyId: string,
   page: number,
   limit = 10,
+  sortBy = "newest",
 ): Promise<{
   success: boolean;
   comments?: Comment[];
@@ -23,7 +24,7 @@ export async function loadMoreCommentsAction(
   totalPages?: number;
   error?: string;
 }> {
-  const result = await getStoryComments(storyId, page, limit);
+  const result = await getStoryComments(storyId, page, limit, sortBy);
 
   if (!result.success) {
     return { success: false, error: result.error };

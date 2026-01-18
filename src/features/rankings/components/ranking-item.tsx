@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Eye, BookOpen, Medal } from "lucide-react";
+import { Eye, BookOpen, Medal, Star } from "lucide-react";
 import { Badge } from "@/shared/ui/badge";
 import { cn } from "@/shared/lib/utils";
 import type { Story } from "@/features/story/interface/story-interface";
@@ -13,9 +13,14 @@ const RANK_COLORS = [
 interface RankingItemProps {
   story: Story;
   rank: number;
+  showRating?: boolean;
 }
 
-export function RankingItem({ story, rank }: RankingItemProps) {
+export function RankingItem({
+  story,
+  rank,
+  showRating = false,
+}: RankingItemProps) {
   const isTopThree = rank <= 3;
   const rankIndex = rank - 1;
 
@@ -29,7 +34,7 @@ export function RankingItem({ story, rank }: RankingItemProps) {
         className={cn(
           "flex items-center justify-center w-10 h-10 rounded-full font-bold text-lg shrink-0",
           isTopThree ? "bg-primary/10" : "bg-muted",
-          isTopThree ? RANK_COLORS[rankIndex] : "text-muted-foreground"
+          isTopThree ? RANK_COLORS[rankIndex] : "text-muted-foreground",
         )}
       >
         {isTopThree ? <Medal className="h-5 w-5" /> : rank}
@@ -49,10 +54,17 @@ export function RankingItem({ story, rank }: RankingItemProps) {
         </h3>
         <p className="text-sm text-muted-foreground">{story.author_name}</p>
         <div className="flex items-center gap-4 mt-1">
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Eye className="h-3 w-3" />
-            {story.view_count.toLocaleString("vi-VN")}
-          </span>
+          {showRating ? (
+            <span className="flex items-center gap-1 text-xs text-yellow-500 font-medium">
+              <Star className="h-3 w-3 fill-yellow-500" />
+              {(story.rating || 0).toFixed(1)}
+            </span>
+          ) : (
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <Eye className="h-3 w-3" />
+              {story.view_count.toLocaleString("vi-VN")}
+            </span>
+          )}
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             <BookOpen className="h-3 w-3" />
             {story.total_chapters} chương

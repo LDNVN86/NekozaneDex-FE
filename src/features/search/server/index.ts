@@ -1,1 +1,1 @@
-export { searchStories, getGenres } from "./api";
+export { searchStories, getGenres, getStoriesByGenre } from "./api";

@@ -18,8 +18,8 @@ export default async function HomePage() {
 
   // Parallel fetches
   const [latestRes, hotRes, genresRes, continueRes] = await Promise.all([
-    getLatestStories(6),
-    getHotStories(4),
+    getLatestStories(12),
+    getHotStories(10),
     getGenres(),
     // Only fetch continue reading if logged in
     isLoggedIn

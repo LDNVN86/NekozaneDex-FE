@@ -3,7 +3,7 @@
 import * as React from "react";
 import type { Story, Chapter } from "@/features/story";
 import type { Comment } from "@/features/comments/server";
-import { StoryHeader, ChapterList, CommentSection } from "./ui";
+import { StoryHeader, ChapterList, CommentSection, StoryRating } from "./ui";
 
 interface StoryDetailClientProps {
   story: Story;
@@ -78,12 +78,18 @@ export function StoryDetailClient({
                 value={story.view_count?.toLocaleString() || "0"}
               />
               <InfoRow label="Số chương" value={chapters.length.toString()} />
-              <InfoRow
-                label="Đánh giá"
-                value={
-                  story.rating ? `${story.rating.toFixed(1)} ⭐` : "Chưa có"
-                }
-              />
+
+              {/* Interactive Rating */}
+              <div className="px-4 py-3 border-t border-border/30">
+                <p className="text-xs text-muted-foreground mb-2">Đánh giá</p>
+                <StoryRating
+                  storyId={story.id}
+                  storySlug={story.slug}
+                  initialRating={story.rating}
+                  initialRatingCount={story.rating_count}
+                  isAuthenticated={!!currentUserId}
+                />
+              </div>
               {story.country && (
                 <InfoRow
                   label="Quốc gia"

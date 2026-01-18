@@ -73,7 +73,7 @@ export function SearchSuggestions({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) {
-      router.push(`/client/search?q=${encodeURIComponent(query.trim())}`);
+      router.push(`/client/stories?q=${encodeURIComponent(query.trim())}`);
       setIsOpen(false);
     }
   };
@@ -150,7 +150,7 @@ export function SearchSuggestions({
             </ul>
           )}
           <Link
-            href={`/client/search?q=${encodeURIComponent(query)}`}
+            href={`/client/stories?q=${encodeURIComponent(query)}`}
             className="block p-3 text-sm text-center text-primary hover:bg-muted border-t"
             onClick={() => setIsOpen(false)}
           >

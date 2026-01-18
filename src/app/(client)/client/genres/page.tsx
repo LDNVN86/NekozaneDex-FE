@@ -24,7 +24,7 @@ export default async function GenresPage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {genres.map((genre) => (
-          <Link key={genre.id} href={`/client/stories?genre=${genre.slug}`}>
+          <Link key={genre.id} href={`/client/genres/${genre.slug}`}>
             <Card className="group hover:border-primary hover:shadow-lg hover:shadow-primary/5 transition-all duration-200 cursor-pointer h-full">
               <CardContent className="p-6 flex flex-col items-center text-center gap-3">
                 <div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">

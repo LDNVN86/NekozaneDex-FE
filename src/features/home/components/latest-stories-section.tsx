@@ -1,5 +1,4 @@
-import { TrendingUp } from "lucide-react";
-import { StoriesSection } from "@/shared/components/stories-section";
+import { StoriesCarouselSection } from "@/shared/components/stories-carousel-section";
 import type { Story } from "@/features/story/interface/story-interface";
 
 interface LatestStoriesSectionProps {
@@ -8,14 +7,13 @@ interface LatestStoriesSectionProps {
 
 export function LatestStoriesSection({ stories }: LatestStoriesSectionProps) {
   return (
-    <StoriesSection
+    <StoriesCarouselSection
       stories={stories}
-      icon={TrendingUp}
+      iconName="TrendingUp"
       title="Truyện Mới Cập Nhật"
       linkHref="/client/stories"
       linkText="Xem tất cả"
-      gridClassName="grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6"
-      isHot={(story) => story.view_count > 1000}
+      showHotBadge="auto"
     />
   );
 }

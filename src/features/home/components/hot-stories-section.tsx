@@ -1,5 +1,4 @@
-import { Flame } from "lucide-react";
-import { StoriesSection } from "@/shared/components/stories-section";
+import { StoriesCarouselSection } from "@/shared/components/stories-carousel-section";
 import type { Story } from "@/features/story/interface/story-interface";
 
 interface HotStoriesSectionProps {
@@ -8,16 +7,16 @@ interface HotStoriesSectionProps {
 
 export function HotStoriesSection({ stories }: HotStoriesSectionProps) {
   return (
-    <StoriesSection
+    <StoriesCarouselSection
       stories={stories}
-      icon={Flame}
+      iconName="Flame"
       iconClassName="text-destructive"
       iconBgClassName="bg-destructive/10"
       title="Truyện Hot"
       linkHref="/client/rankings"
       linkText="Xem bảng xếp hạng"
       sectionClassName="bg-secondary/30"
-      isHot
+      showHotBadge="all"
     />
   );
 }

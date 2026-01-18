@@ -1,4 +1,5 @@
-import { getHotStories, getStories } from "@/features/story";
+import { getHotStories } from "@/features/story";
+import { getStoriesWithFilters } from "@/features/story/server/api";
 import { createMetadata } from "@/shared/lib/seo";
 import { RankingsHeader, RankingsTabs } from "@/features/rankings";
 
@@ -8,28 +9,21 @@ export const metadata = createMetadata({
 });
 
 export default async function RankingsPage() {
-  const [storiesRes, hotRes] = await Promise.all([
-    getStories(1, 20),
+  // Fetch rankings from backend with proper sorting
+  const [byViewsRes, byRatingRes, hotRes] = await Promise.all([
+    getStoriesWithFilters({ sort: "popular", limit: 20 }),
+    getStoriesWithFilters({ sort: "rating", limit: 20 }),
     getHotStories(10),
   ]);
 
-  const allStories = storiesRes.success ? storiesRes.data.data : [];
-  const hotStories = hotRes.success ? hotRes.data : [];
-
-  // Pre-sort stories on server for better performance
-  const byViews = [...allStories].sort((a, b) => b.view_count - a.view_count);
-  const byChapters = [...allStories].sort(
-    (a, b) => b.total_chapters - a.total_chapters
-  );
+  const byViews = byViewsRes.success ? byViewsRes.data.data : [];
+  const byRating = byRatingRes.success ? byRatingRes.data.data : [];
+  const trending = hotRes.success ? hotRes.data : [];
 
   return (
     <div className="container mx-auto px-4 py-8">
       <RankingsHeader />
-      <RankingsTabs
-        byViews={byViews}
-        byChapters={byChapters}
-        trending={hotStories}
-      />
+      <RankingsTabs byViews={byViews} byRating={byRating} trending={trending} />
     </div>
   );
 }

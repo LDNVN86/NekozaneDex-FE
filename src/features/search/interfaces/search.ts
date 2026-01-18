@@ -29,7 +29,9 @@ export interface SearchHeaderProps {
 export interface GenreFilterProps {
   genres: Genre[];
   selectedGenres: string[];
+  genreMode: "AND" | "OR";
   onToggleGenre: (slug: string) => void;
+  onToggleGenreMode: () => void;
   onClearFilters: () => void;
 }
 
